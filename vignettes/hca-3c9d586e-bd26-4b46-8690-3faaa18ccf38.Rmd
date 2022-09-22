@@ -1,0 +1,217 @@
+---
+title: "Case Study: `r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`"
+author:
+  - name: Martin Morgan
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Martin.Morgan@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "`r doc_date()`"
+package: "`r pkg_ver('hcaCaseStudies')`"
+vignette: >
+  %\VignetteIndexEntry{`r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+library(hca)
+library(dplyr)
+```
+
+Set the project id
+
+```{r project_id}
+project_id <- "3c9d586e-bd26-4b46-8690-3faaa18ccf38"
+```
+
+Display information about the project
+
+```{r project-information}
+project_information(project_id)
+```
+
+# Data processing
+
+## Project & samples
+
+Create a filter to identify the project
+
+```{r filter}
+project_filter <- filters(projectId = list(is = project_id))
+```
+
+Find the project
+
+```{r find_project}
+p <- projects(project_filter)
+p |> glimpse()
+p |> pull(projectTitle) |> noquote()
+```
+
+Samples associated with the project
+
+```{r samples}
+s <- samples(project_filter, as = "tibble_expanded")
+
+## all informative columns
+s |>
+    select(where(column_is_not_all_NA)) |>
+    DT::datatable()
+```
+
+Some preliminary exploration of sample descriptions
+
+```{r samples-exploration}
+## informative 'specimen' or donorOrganisms columns
+s |>
+    select(starts_with("specimens") | starts_with("donorOrganisms")) |>
+    select(where(column_is_informative))
+```
+
+Invariant information is really telling us about the
+experiment...
+
+```{r experiment-metadata}
+s |>
+    select(where(column_is_experimentwide)) |>
+    distinct() |>
+    glimpse()
+```
+
+## Data files
+
+The project has 'fastq' and 'txt.gz' files. There are nine txt.gz
+files but only 7 samples -- there are 7 'GSM' sample files, and two
+experiment-wide 'GSE' summary files
+
+```{r files-available}
+files0 <- files(project_filter)
+files0
+
+files0 |>
+    count(fileFormat)
+
+files1 <-
+    files0 |>
+    filter(fileFormat == "txt.gz")
+files1 |>
+    select(name)
+```
+
+Retrieve and cache locally all txt.gz files
+
+```{r retrieve}
+file_path <-
+    files1 |>
+    filter(fileFormat == "txt.gz") |>
+    files_download() |>
+    unname()
+
+files2 <-
+    files1 |>
+    left_join(tibble(
+        fileId = files1$fileId,
+        local.filePath = file_path
+    ), by = "fileId")
+```
+
+We can extract some data from the files, e.g., cell and gene counts
+
+```{r file_data}
+files3 <-
+    files2 |>
+    geo_cell_count() |>
+    geo_gene_count()
+
+files3 |>
+    select(name, local.cellCount, local.geneCount)
+```
+## Count matrix
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    files3 |>
+        filter(startsWith(name, "GSM")) |>
+        geo_count_matrix_gsms() |>
+        cache_add(project_id, object_name)
+}
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1] # sparse matrix
+dim(count_matrix)      # genes x cells
+```
+
+## SingleCellExperiment
+
+Column (sample) data
+
+```{r colData}
+geo_id <-
+    pull(files3, "name") |>
+    strsplit("_") |>
+    vapply(head, character(1), 1L)
+files4 <- bind_cols(files3, local.geoId = geo_id)
+
+colData <-
+    s |>
+    select(where(column_is_informative)) |>
+    left_join(
+        bind_cols(files3, local.geoId = geo_id),
+        by = c(samples.id = "local.geoId")
+    )
+colData |>
+    DT::datatable()
+```
+
+Experiment-wide metadata
+
+```{r metadata}
+metadata <-
+    s |>
+    select(where(column_is_experimentwide)) |>
+    distinct()
+
+metadata |>
+    t() |>
+    DT::datatable()
+```
+
+Assemble into SingleCellExperiment (to come)
+
+# Anomalies
+
+donorOrganism.donorCount seems to be incorrect for GSM1626793 (7,
+instead of 1).
+
+```{r donorOrganisms.donorCount}
+file_filter <- filters(
+    projectId = list(is = project_id),
+    fileFormat = list(is = "txt.gz")
+)
+files(file_filter, as = "tibble_expanded") |>
+    select(name, donorOrganisms.donorCount, files.size)
+```
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```
