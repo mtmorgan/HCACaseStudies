@@ -1,5 +1,5 @@
 ---
-title: "Case Study: `r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`"
+title: "Case Study: `r hcaCaseStudies::project_title('8f630e0f-6bf9-4a04-9754-02533152a954')`"
 author:
   - name: Martin Morgan
     affiliation:
@@ -14,7 +14,7 @@ output:
 date: "`r doc_date()`"
 package: "`r pkg_ver('hcaCaseStudies')`"
 vignette: >
-  %\VignetteIndexEntry{`r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`}
+  %\VignetteIndexEntry{`r hcaCaseStudies::project_title('8f630e0f-6bf9-4a04-9754-02533152a954')`}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "3c9d586e-bd26-4b46-8690-3faaa18ccf38"
+project_id <- "8f630e0f-6bf9-4a04-9754-02533152a954"
 ```
 
 Display information about the project
@@ -69,7 +69,6 @@ Find the project
 ```{r find_project}
 p <- projects(project_filter)
 p |> glimpse()
-p |> pull(projectTitle) |> noquote()
 ```
 
 Samples associated with the project
@@ -92,6 +91,14 @@ s |>
     select(where(column_is_informative))
 ```
 
+It's easy to summarize information about the sammples in this
+experiment, e.g.,
+
+```{r sample-information}
+s |>
+    count(specimens.organ, donorOrganisms.developmentStage)
+```
+
 Invariant information is really telling us about the
 experiment...
 
@@ -104,39 +111,47 @@ s |>
 
 ## Data files
 
-The project has 'fastq' and 'txt.gz' files. There are nine txt.gz
-files but only 7 samples -- there are 7 'GSM' sample files, and two
-experiment-wide 'GSE' summary files
+The project has a single 'tar' file archive
 
 ```{r files-available}
-files0 <- files(project_filter)
-files0
-
-files0 |>
-    count(fileFormat)
-
-files1 <-
-    files0 |>
-    filter(fileFormat == "txt.gz")
+files1 <- files(project_filter)
 files1 |>
-    select(name)
+    select(name, fileFormat)
 ```
 
-Retrieve and cache locally all txt.gz files
+Retrieve, list the content, and untar (to a temporary location; untar
+is relatively quick) the file.
 
 ```{r retrieve}
-file_path <-
+tar_file <-
     files1 |>
-    filter(fileFormat == "txt.gz") |>
     files_download() |>
     unname()
 
+## what files are in the tar?
+tar_files <- untar(tar_file, list = TRUE)
+tar_files
+
+## untar to a temporary location
+exdir <- tempfile(); dir.create(exdir)
+untar(tar_file, exdir = exdir)
+```
+
+Annotate the `files1` object with local file information
+
+```{r file-annotate}
+files_local <- tibble(
+    fileId = files1$fileId,
+    local.fileName = tar_files,
+    local.filePath = file.path(exdir, tar_files)
+)
+
 files2 <-
     files1 |>
-    left_join(tibble(
-        fileId = files1$fileId,
-        local.filePath = file_path
-    ), by = "fileId")
+    ## 1:many mapping from files1 to files_local
+    right_join(files_local, by = "fileId") |>
+    ## make fileId unique
+    mutate(fileId = paste(fileId, local.fileName, sep = "-"))
 ```
 
 We can extract some data from the files, e.g., cell and gene counts
@@ -144,25 +159,24 @@ We can extract some data from the files, e.g., cell and gene counts
 ```{r file_data}
 files3 <-
     files2 |>
-    geo_cell_count() |>
+    geo_cell_count(sep = ",") |>
     geo_gene_count()
 
 files3 |>
-    select(name, local.cellCount, local.geneCount)
+    select(local.fileName, local.cellCount, local.geneCount)
 ```
 
 ## Count matrix
 
-The GSE count matrices are not quite useful, because we do not know
-definitively how to map from cell to sample. We compute the count
-matrix by concatenating counts from the GSM files.
+We compute the count matrix by concatenating counts from the GSM
+files.
 
 ```{r count-matrix}
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     files3 |>
-        filter(startsWith(name, "GSM")) |>
-        geo_count_matrix_gsms() |>
+        filter(startsWith(local.fileName, "GSM")) |>
+        geo_count_matrix_gsms(reader_function = readr::read_csv) |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
@@ -178,7 +192,7 @@ Column (sample) data
 
 ```{r colData}
 geo_id <-
-    pull(files3, "name") |>
+    pull(files3, "local.fileName") |>
     strsplit("_") |>
     vapply(head, character(1), 1L)
 files4 <- bind_cols(files3, local.geoId = geo_id)
@@ -211,16 +225,15 @@ Assemble into SingleCellExperiment (to come)
 
 # Anomalies
 
-donorOrganism.donorCount seems to be incorrect for GSM1626793 (7,
-instead of 1).
+NB34 and NB37 have gene counts that are different from all others
 
-```{r donorOrganisms.donorCount}
-file_filter <- filters(
-    projectId = list(is = project_id),
-    fileFormat = list(is = "txt.gz")
-)
-files(file_filter, as = "tibble_expanded") |>
-    select(name, donorOrganisms.donorCount, files.size)
+```{r}
+files4 |>
+    count(local.geneCount)
+
+files4 |>
+    filter(local.geneCount == 32966) |>
+    select(local.fileName, local.geneCount)
 ```
 
 # sessionInfo() {.unnumbered}

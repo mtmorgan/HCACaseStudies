@@ -17,17 +17,17 @@ project_information_title_clean <-
     project_information_strwrap(title)
 }
 
-project_information_description_clean <-
-    function(description)
-{
-    project_information_strwrap(description)
-}
-
 project_information_contributors_clean <-
     function(contributors)
 {        
     clean0 <- sub(",,", " ", contributors[[1]])
     project_information_strwrap(paste(clean0, collapse = ", "))
+}
+
+project_information_description_clean <-
+    function(description)
+{
+    project_information_strwrap(description)
 }
 
 
