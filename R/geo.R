@@ -2,7 +2,7 @@
 #'
 #' @export
 geo_cell_count <-
-    function(.data)
+    function(.data, sep = "\\t")
 {
     stopifnot(
         inherits(.data, "files_tbl_hca"),
@@ -15,7 +15,7 @@ geo_cell_count <-
         pull(.data, "local.filePath") |>
         vapply(function(file) {
             first <- readLines(file, n = 1)
-            length(strsplit(first, "\\t")[[1]])
+            length(strsplit(first, sep)[[1]])
         }, integer(1))
 
     tbl <- tibble(fileId = file_id, local.cellCount = unname(cell_count) - 1L)
