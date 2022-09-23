@@ -1,5 +1,5 @@
 ---
-title: "Case Study: `r hcaCaseStudies::project_title('8f630e0f-6bf9-4a04-9754-02533152a954')`"
+title: "Case Study: The immune cell atlas of human neuroblastoma"
 author:
   - name: Martin Morgan
     affiliation:
@@ -11,10 +11,10 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "`r doc_date()`"
-package: "`r pkg_ver('hcaCaseStudies')`"
+date: "22 September 2022"
+package: "hcaCaseStudies 0.0.0.9000"
 vignette: >
-  %\VignetteIndexEntry{`r hcaCaseStudies::project_title('8f630e0f-6bf9-4a04-9754-02533152a954')`}
+  %\VignetteIndexEntry{Case Study: The immune cell atlas of human neuroblastoma}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -224,6 +224,8 @@ metadata |>
 Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+The list of contributors (2 identified) is incomplete.
 
 NB34 and NB37 have gene counts that are different from all others
 

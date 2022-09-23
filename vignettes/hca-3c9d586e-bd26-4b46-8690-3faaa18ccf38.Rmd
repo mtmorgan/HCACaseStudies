@@ -1,5 +1,5 @@
 ---
-title: "Case Study: `r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`"
+title: "Case Study: Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets"
 author:
   - name: Martin Morgan
     affiliation:
@@ -11,10 +11,10 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "`r doc_date()`"
-package: "`r pkg_ver('hcaCaseStudies')`"
+date: "22 September 2022"
+package: "hcaCaseStudies 0.0.0.9000"
 vignette: >
-  %\VignetteIndexEntry{`r hcaCaseStudies::project_title('3c9d586e-bd26-4b46-8690-3faaa18ccf38')`}
+  %\VignetteIndexEntry{Case Study: Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
