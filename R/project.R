@@ -84,6 +84,6 @@ project_title <-
     )
 
     project_information(project_id) |>
-        pull(projectTitle) |>
+        pull("projectTitle") |>
         project_information_title_preclean()
 }
