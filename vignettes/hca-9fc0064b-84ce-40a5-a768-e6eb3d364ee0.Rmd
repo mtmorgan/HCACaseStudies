@@ -1,0 +1,153 @@
+---
+title: "Case Study: Single-cell RNA-seq reveals cell type-specific molecular and genetic associations to lupus"
+author:
+  - name: Martin Morgan
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Martin.Morgan@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "23 September 2022"
+package: "hcaCaseStudies 0.0.0.9000"
+vignette: >
+  %\VignetteIndexEntry{Case Study: Single-cell RNA-seq reveals cell type-specific molecular and genetic associations to lupus }
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+library(hca)
+library(dplyr)
+```
+
+## Project information
+
+Set the project id
+
+```{r project_id}
+project_id <- "9fc0064b-84ce-40a5-a768-e6eb3d364ee0"
+```
+
+Display information about the project
+
+```{r project-information}
+project_information(project_id)
+```
+
+## Conventions
+
+Statistics calculated locally use `local.*` for column names, e.g.,
+`local.cellCount`.
+
+# Data processing
+
+## Project & samples
+
+Create a filter to identify the project
+
+```{r filter}
+project_filter <- filters(projectId = list(is = project_id))
+```
+
+Find the project
+
+```{r find_project}
+p <- projects(project_filter)
+p |> glimpse()
+```
+
+Samples associated with the project
+
+```{r samples}
+s <- samples(project_filter, as = "tibble_expanded")
+```
+
+Columns are either variable and therefore describe sample-level
+information...
+
+```{r samples-exploration}
+## informative 'specimen' or 'donorOrganisms' columns
+s |>
+    select(starts_with("specimens") | starts_with("donorOrganisms")) |>
+    select(where(column_is_informative)) |>
+    glimpse()
+
+## helper function to group 'donorOrganisms.developmentStage' into deciles
+stage_to_age <-
+    function(developmentStage)
+{
+    age <- sub("-year-old human stage", "", developmentStage)
+    ## some 'age' are 'variable'; the following adds 'variable' as a level
+    unknown_age <- grepl("variable", age)
+    age[unknown_age] <- NA
+    decade <- addNA(cut(as.integer(age), seq(0, 100, 10)))
+    levels(decade)[is.na(levels(decade))] <-
+        unique(developmentStage[unknown_age])
+    decade
+}
+        
+## summary of developmentStage (age_decade) and biologicalSex (female, male)
+s |>
+    count(donorOrganisms.biologicalSex, donorOrganisms.developmentStage) |>
+    ## developmentStage format is '20-year-old human stage'; summarize
+    ## to decade
+    mutate(
+        age_decade = stage_to_age(donorOrganisms.developmentStage)
+    ) |>
+    group_by(age_decade, donorOrganisms.biologicalSex) |>
+    summarize(n = sum(n), .groups = "drop") |>
+    tidyr::pivot_wider(
+               names_from = "donorOrganisms.biologicalSex",
+               values_from = "n"
+           )
+```
+
+...or invariant and reflect experiment-wide annotation
+
+```{r experiment-metadata}
+s |>
+    select(where(column_is_experimentwide)) |>
+    distinct() |>
+    glimpse()
+```
+
+## Data files
+
+What types of files does the project have?
+
+```{r files-available, cache = TRUE}
+files1 <- files(project_filter)
+
+files1
+
+files1 |>
+    count(fileFormat)
+```
+
+This project has a lot of 'fastq' files, but no derived files so
+cannot be used to easily construct a count matrix.
+
+# Anomalies
+
+No count summary files.
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```
