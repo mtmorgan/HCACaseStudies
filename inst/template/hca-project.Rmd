@@ -1,0 +1,208 @@
+---
+title: "Case Study: {{{project_title}}}"
+author:
+  - name: Martin Morgan
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Martin.Morgan@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "{{{doc_date}}}"
+package: "{{{pkg_ver}}}"
+vignette: >
+  %\VignetteIndexEntry{Case Study: {{{project_title}}} }
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+library(hca)
+library(dplyr)
+```
+
+## Project information
+
+Set the project id
+
+```{r project_id}
+project_id <- "{{{project_id}}}"
+```
+
+Display information about the project
+
+```{r project-information}
+project_information(project_id)
+```
+
+## Conventions
+
+Statistics calculated locally use `local.*` for column names, e.g.,
+`local.cellCount`.
+
+# Data processing
+
+## Project & samples
+
+Create a filter to identify the project
+
+```{r filter}
+project_filter <- filters(projectId = list(is = project_id))
+```
+
+Find the project
+
+```{r find_project}
+p <- projects(project_filter)
+p |> glimpse()
+```
+
+Samples associated with the project
+
+```{r samples}
+s <- samples(project_filter, as = "tibble_expanded")
+```
+
+Columns are either variable and therefore describe sample-level
+information...
+
+```{r samples-exploration}
+## informative 'specimen' or 'donorOrganisms' columns
+s |>
+    select(starts_with("specimens") | starts_with("donorOrganisms")) |>
+    select(where(column_is_informative)) |>
+    glimpse()
+```
+
+...or invariant and reflect experiment-wide annotation
+
+```{r experiment-metadata}
+s |>
+    select(where(column_is_experimentwide)) |>
+    distinct() |>
+    glimpse()
+```
+
+## Data files
+
+What types of files does the project have?
+
+```{r files-available}
+files1 <- files(project_filter)
+
+files1 |>
+    glimpse()
+
+files1 |>
+    count(fileFormat)
+```
+
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
+
+```{r retrieve}
+file_path <-
+    files1 |>
+    ## filter as needed, then...
+    files_download() |>
+    unname()
+
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files1 |>
+    left_join(tibble(
+        fileId = files1$fileId,
+        local.filePath = file_path
+    ), by = "fileId")
+```
+
+We can extract some data from the files, e.g., cell and gene counts
+
+```{r file_data}
+## 'files' is the final, locally modified, version of file data
+count_matrix_files <-
+    count_matrix_files |>
+    geo_cell_count() |>
+    geo_gene_count()
+
+count_matrix_files |>
+    select(name, local.cellCount, local.geneCount)
+```
+
+## Count matrix
+
+The GSE count matrices are not quite useful, because we do not know
+definitively how to map from cell to sample. We compute the count
+matrix by concatenating counts from the GSM files.
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    count_matrix_files |>
+        filter(startsWith(name, "GSM")) |>
+        geo_count_matrix_gsms() |>
+        cache_add(project_id, object_name)
+}
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1] # sparse matrix
+dim(count_matrix)      # genes x cells
+format(object.size(count_matrix), units = "auto")
+```
+
+## SingleCellExperiment
+
+Column (sample) data
+
+```{r colData}
+geo_id <-
+    pull(count_matrix_files, "name") |>
+    strsplit("_R") |>
+    vapply(head, character(1), 1L)
+
+colData <-
+    s |>
+    select(where(column_is_informative)) |>
+    left_join(
+        bind_cols(files, local.geoId = geo_id),
+        by = c(samples.id = "local.geoId")
+    )
+colData |>
+    DT::datatable()
+```
+
+Experiment-wide metadata
+
+```{r metadata}
+metadata <-
+    s |>
+    select(where(column_is_experimentwide)) |>
+    distinct()
+
+metadata |>
+    glimpse()
+```
+
+Assemble into SingleCellExperiment (to come)
+
+# Anomalies
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```

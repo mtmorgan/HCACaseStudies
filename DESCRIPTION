@@ -28,7 +28,8 @@ Imports:
     utils,
     methods,
     dplyr,
-    hca
+    hca,
+    whisker
 Suggests: 
     BiocStyle,
     knitr,
