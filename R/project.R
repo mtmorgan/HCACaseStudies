@@ -30,10 +30,29 @@ project_information_description_clean <-
     project_information_strwrap(description)
 }
 
-
+#' @rdname project
+#'
+#' @title Project-related Queries
+#'
+#' @description `project_information()` queries the HCA databasee for
+#'     project title, description, contact, DOI, and publication URI.
+#'
+#' @param project_id `character(1)` project identifier, e.g.,
+#'     `"3c9d586e-bd26-4b46-8690-3faaa18ccf38"`.
+#'
+#' @return `project_information()` returns a tibble with a single row,
+#'     and columns containing information about the project. The
+#'     tibble is of class `project_information` and is printed in an
+#'     interactive session formatted so long columns, e.g.,
+#'     `projectDescription`, are more easily read.
+#'
 #' @importFrom hca filters projects
 #'
 #' @importFrom dplyr mutate
+#'
+#' @examples
+#' project_id <- "3c9d586e-bd26-4b46-8690-3faaa18ccf38"
+#' project_information(project_id)
 #'
 #' @export
 project_information <-
@@ -58,6 +77,45 @@ project_information <-
     project
 }
 
+#' @rdname project
+#'
+#' @description `project_title()` returns the title of the project,
+#'     cleaned to remove trailing trailing `.`.
+#'
+#' @return `project_title()` returns a character(1) vector containing
+#'     the project title.
+#'
+#' @examples
+#' project_title(project_id)
+#'
+#' @export
+project_title <-
+    function(project_id)
+{
+    stopifnot(
+        .is_scalar_character(project_id)
+    )
+
+    project_information(project_id) |>
+        pull("projectTitle") |>
+        project_information_title_preclean()
+}
+
+#' @rdname project
+#'
+#' @description `print.project_information()` formats the result of
+#'     `project_information()` in a more legible manner.
+#'
+#' @param x an object of class `project_information`, the result of a
+#'     call to `project_information()`.
+#'
+#' @param ... additional arguments, required to conform with the
+#'     `print` generic but not used.
+#'
+#' @return `print.project_information()` is invoked automatically when
+#'     the result of `project_information()` is displayed for it's
+#'     side effect of displaying the object.
+#'
 #' @export
 print.project_information <-
     function(x, ...)
@@ -73,17 +131,4 @@ print.project_information <-
         "url: ", x$url, "\n",
         sep = ""
     )
-}
-
-#' @export
-project_title <-
-    function(project_id)
-{
-    stopifnot(
-        .is_scalar_character(project_id)
-    )
-
-    project_information(project_id) |>
-        pull("projectTitle") |>
-        project_information_title_preclean()
 }
