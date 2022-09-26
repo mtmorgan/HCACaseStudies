@@ -163,7 +163,7 @@ count_lines_in_gzfile <-
     function(fl)
 {
     if (identical(.Platform$OS.type, "unix")) {
-        value <- system2("gzcat", c(fl, "| wc -l"), stdout = TRUE)
+        value <- system2("gunzip", c("-c", fl, "| wc -l"), stdout = TRUE)
         count <- as.integer(value)
     } else {
         count <- 0L
