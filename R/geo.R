@@ -123,7 +123,7 @@ geo_gsm_count_matrix <-
             Sys.unsetenv("VROOM_CONNECTION_SIZE")
         }
     })
-    Sys.setenv(VROOM_CONNECTION_SIZE = 8 * 131072L) # determined empricially
+    Sys.setenv(VROOM_CONNECTION_SIZE = 8 * 131072L) # determined emprically
 
 
     file_paths <- pull(.data, "local.filePath")
