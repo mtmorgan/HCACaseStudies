@@ -1,6 +1,6 @@
 Package: hcaCaseStudies
 Title: Case Studies Using Data from the Human Cell Atlas
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     person(
         given = "Martin", family = "Morgan",
@@ -35,6 +35,7 @@ Suggests:
     readr,
     tidyr,
     BiocStyle,
+    futile.logger,
     knitr,
     rmarkdown,
     sessioninfo,
