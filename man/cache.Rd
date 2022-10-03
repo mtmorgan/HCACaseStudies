@@ -26,7 +26,7 @@ cache_read(project_id, object_name, reader_function = readRDS, ...)
 cache_remove(project_id, object_name)
 }
 \arguments{
-\item{create}{logical(1) create the cache if it does not exist?
+\item{create}{\code{logical(1)} create the cache if it does not exist?
 Default: \code{TRUE}.}
 
 \item{project_id}{\code{character(1)} project identifier, e.g.,

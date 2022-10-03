@@ -48,7 +48,7 @@ project_information_description_clean <-
 #'
 #' @importFrom hca filters projects
 #'
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate bind_cols
 #'
 #' @examples
 #' project_id <- "3c9d586e-bd26-4b46-8690-3faaa18ccf38"
@@ -73,6 +73,13 @@ project_information <-
     )
                
     project <- projects(filter, columns = columns)
+    if (identical(NROW(project), 0L))
+        stop("did not find project_id '", project_id, "'")
+    project_base_url <- "https://data.humancellatlas.org/explore/projects/"
+    project <- bind_cols(
+        project,
+        tibble(hca_project_url = paste0(project_base_url, project_id))
+    )
     class(project) <- c("project_information", class(project))
     project
 }
@@ -129,6 +136,7 @@ print.project_information <-
         project_information_description_clean(x$projectDescription), "\n",
         "doi: ", x$doi, "\n",
         "url: ", x$url, "\n",
+        "project: ", x$hca_project_url, "\n",
         sep = ""
     )
 }

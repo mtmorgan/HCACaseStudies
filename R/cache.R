@@ -12,7 +12,7 @@ cache_object_id <-
 #'     object containing information about objects in the
 #'     package-specific cache.
 #'
-#' @param create logical(1) create the cache if it does not exist?
+#' @param create `logical(1)` create the cache if it does not exist?
 #'     Default: `TRUE`.
 #'
 #' @return `cache()` returns a `BiocFileCache` object that can be

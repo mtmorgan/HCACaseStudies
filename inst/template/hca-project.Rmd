@@ -109,6 +109,12 @@ files1 |>
 
 files1 |>
     count(fileFormat)
+
+## create `files1` with just the files needed for count-matrix
+## analysis
+
+files1 |>
+    select(name)
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
@@ -117,16 +123,15 @@ count matrix.
 ```{r retrieve}
 file_path <-
     files1 |>
-    ## filter as needed, then...
     files_download() |>
-    unname()
+    setNames(files1 |> pull(name))
 
 ## join file path to appropriate components of `f`
 count_matrix_files1 <-
     files1 |>
     left_join(tibble(
         fileId = files1$fileId,
-        local.filePath = file_path
+        local.filePath = unname(file_path)
     ), by = "fileId")
 ```
 
@@ -135,12 +140,12 @@ We can extract some data from the files, e.g., cell and gene counts
 ```{r file_data}
 ## 'files' is the final, locally modified, version of file data
 count_matrix_files <-
-    count_matrix_files |>
-    geo_cell_count() |>
-    geo_gene_count()
+    count_matrix_files1 |>
+    geo_gsm_cell_count() |>
+    geo_gsm_gene_count()
 
 count_matrix_files |>
-    select(name, local.cellCount, local.geneCount)
+    select(name, local.geneCount, local.cellCount)
 ```
 
 ## Count matrix
@@ -154,7 +159,7 @@ object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
         filter(startsWith(name, "GSM")) |>
-        geo_count_matrix_gsms() |>
+        geo_gsm_count_matrix() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
