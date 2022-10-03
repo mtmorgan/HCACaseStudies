@@ -30,11 +30,25 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          cache: true
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Manage hcaCaseStudies caches
+        id: cache-hca-case-studies
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-hca-case-studies
+        with:
+          path: |
+            ~/.cache/R/hca
+            ~/.cache/R/hcaCaseStudies
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: pkgdown::build_site_github_pages(new_process = TRUE, install = FALSE)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀

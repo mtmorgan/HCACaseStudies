@@ -172,7 +172,7 @@ count_matrix_files |>
 
 Compute the count matrix by concatenating counts from the GSM files.
 
-```{r count-matrix}
+```{r count-matrix, eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))}
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
