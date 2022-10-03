@@ -1,0 +1,13 @@
+pandoc: 2.14.2
+pkgdown: 2.0.6
+pkgdown_sha: ~
+articles:
+  hca-3c9d586e-bd26-4b46-8690-3faaa18ccf38: hca-3c9d586e-bd26-4b46-8690-3faaa18ccf38.html
+  hca-5b910a43-7fb5-4ea7-b9d6-43dbd1bf2776: hca-5b910a43-7fb5-4ea7-b9d6-43dbd1bf2776.html
+  hca-8f630e0f-6bf9-4a04-9754-02533152a954: hca-8f630e0f-6bf9-4a04-9754-02533152a954.html
+  hca-9fc0064b-84ce-40a5-a768-e6eb3d364ee0: hca-9fc0064b-84ce-40a5-a768-e6eb3d364ee0.html
+last_built: 2022-10-03T23:51Z
+urls:
+  reference: https://mtmorgan.github.io/hcaCaseStudies/reference
+  article: https://mtmorgan.github.io/hcaCaseStudies/articles
+
