@@ -1,0 +1,311 @@
+---
+title: "Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains"
+author:
+  - name: Martin Morgan
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Martin.Morgan@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "4 October 2022"
+package: "hcaCaseStudies 0.0.0.9003"
+vignette: >
+  %\VignetteIndexEntry{Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains }
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+library(hca)
+library(dplyr)
+pivot_wider <- tidyr::pivot_wider
+```
+
+## Project information
+
+Set the project id
+
+```{r project_id}
+project_id <- "9a23ac2d-93dd-4bac-9bb8-040e6426db9d"
+```
+
+Display information about the project
+
+```{r project-information}
+project_information(project_id)
+```
+
+## Conventions
+
+Statistics calculated locally use `local.*` for column names, e.g.,
+`local.cellCount`.
+
+# Data processing
+
+## Project & samples
+
+Create a filter to identify the project
+
+```{r filter}
+project_filter <- filters(projectId = list(is = project_id))
+```
+
+Find the project
+
+```{r find_project}
+p <-
+    projects(project_filter, as = "tibble_expanded") |>
+    ## some column names are very long...
+    rename_with(
+        ~ sub(".*\\.(.*)", "projects.contributedAnalyses.\\1", .x),
+        starts_with("projects.contributedAnalyses")
+    )
+
+p |> glimpse()
+```
+
+Samples associated with the project
+
+```{r samples}
+s <- samples(project_filter, as = "tibble_expanded")
+```
+
+Columns are either variable and therefore describe sample-level
+information...
+
+```{r samples-exploration}
+## informative 'specimen' or 'donorOrganisms' columns
+s |>
+    select(starts_with("specimens") | starts_with("donorOrganisms")) |>
+    select(where(column_is_informative))
+
+s |>
+    count(specimens.disease, donorOrganisms.biologicalSex) |>
+    pivot_wider(
+        names_from = "donorOrganisms.biologicalSex",
+        values_from = "n"
+    )
+```
+
+...or invariant and reflect experiment-wide annotation (also found in
+the project data)
+
+```{r experiment-metadata}
+s |>
+    select(where(column_is_experimentwide)) |>
+    distinct() |>
+    glimpse()
+```
+
+## Data files
+
+What types of files does the project have?
+
+```{r files-available}
+files1 <- files(project_filter)
+
+files1 |>
+    glimpse()
+
+files1 |>
+    count(fileFormat)
+```
+
+Looks like a 'tar' file contains useful data
+
+```{r}
+files2 <-
+    files1 |>
+    filter(fileFormat == "tar")
+```
+
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
+
+```{r retrieve}
+tar_file <-
+    files2 |>
+    files_download() |>
+    setNames(files2 |> pull(name))
+```
+
+This is a 'tar' archive of GSM files; untar these to a temporary
+location
+
+```{r}
+## what files are in the tar?
+tar_files <- untar(tar_file, list = TRUE)
+length(tar_files)
+head(tar_files)
+
+## untar to a temporary location
+exdir <- tempfile(); dir.create(exdir)
+untar(tar_file, exdir = exdir)
+```
+
+Parse the file names to create a tibble with local file path, file
+type, and sample id
+
+```{r local-files}
+local_files <-
+    tibble(
+        local.filePath = file.path(exdir, tar_files),
+        ## local.fileType becomes one of barcodesPath, genesPath, matrixPath
+        local.fileType = sub(".*_([[:alpha:]]*).*", "\\1Path", tar_files),
+        local.sampleId = sub("([^_]*).*", "\\1", tar_files)
+    ) |>
+    ## each 'sampleId' has a barcodesPath, genesPath, and matrixPath
+    pivot_wider(
+        names_from = local.fileType,
+        names_prefix = "local.",
+        values_from = "local.filePath"
+    )
+
+## 12 samples
+local_files |>
+    mutate(across(ends_with("Path"), basename))
+```
+
+Extract some data from the files, e.g., cell and gene counts.
+
+<!--
+add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
+more than 7 GB
+-->
+
+```{r file-data}
+gene_and_cell_counts <-
+    local_files |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
+    rename(local.cellCount = local.lines) |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
+    rename(local.geneCount = local.lines)
+
+gene_and_cell_counts |>
+    select(local.sampleId, local.geneCount, local.cellCount)
+```
+
+## Count matrix
+
+Each sample has a 'matrix mart' text file representing counts in all
+cells of the sample. Use `mtx_count_matrix()` to read these into a
+`dgCMatrix` sparse matrix (defined in the `Matrix` package). Save it
+in the package cache for re-use across _R_ sessions.
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    local_files |>
+        mtx_count_matrix(
+            "local.matrixPath", "local.genesPath", "local.barcodesPath"
+        ) |>
+        cache_add(project_id, object_name)
+}
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1] # sparse matrix
+format(object.size(count_matrix), units = "auto") # how much memory?
+
+## dimensions of genes x cells count matrix should match annotation summaries
+dim(count_matrix)      # genes x cells
+gene_and_cell_counts |>
+    summarize(genes = unique(local.geneCount), cells = sum(local.cellCount))
+```
+
+## Row, sample, and cell annotations
+
+Row (gene) data
+
+```{r row_data}
+## all 'genes' files are identical?
+row_data <-
+    local_files |>
+    slice(1) |>
+    pull("local.genesPath") |>
+    readr::read_tsv(
+        col_names = c("ensembl_id", "hugo_symbol", "annotation"),
+        show_col_types = FALSE
+        )
+
+row_data
+```
+
+Column (sample & cell) data
+
+```{r sample_data}
+sample_data <-
+    ## from the hca sample annotation...
+    s |>
+    select(
+        where(column_is_informative) & where(is.atomic)
+    ) |>
+    ## ...and local_files (gene and cell counts)
+    left_join(
+        gene_and_cell_counts |>
+        select(local.sampleId, local.cellCount, local.geneCount),
+        by = c(samples.id = "local.sampleId")
+    )
+
+sample_data |> DT::datatable()
+```
+
+```{r cell_data}
+cell_barcodes <-
+    local_files |>
+    pull("local.barcodesPath") |>
+    lapply(readLines)
+
+sampleId <- pull(local_files, "local.sampleId")
+cell_data <- tibble(
+    local.sampleId = rep(sampleId, lengths(cell_barcodes)),
+    local.barcodes = unlist(cell_barcodes, use.names = FALSE)
+)
+
+cell_data
+
+## N.B. some barcodes are duplicated 2 or 3 times
+cell_data |>
+    count(local.barcodes, sort = TRUE, name = "occurrences") |>
+    count(occurrences, name = "n_barcodes")
+```
+
+## Experiment-wide metadata
+
+```{r metadata}
+sample_metadata <-
+    s |>
+    select(where(column_is_experimentwide) & !any_of(names(p))) |>
+    distinct()
+
+metadata <- bind_cols(p, sample_metadata)
+
+metadata |>
+    glimpse()
+```
+
+## Assemble into SingleCellExperiment (to come)
+
+# Anomalies
+
+None noted.
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```
