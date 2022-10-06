@@ -57,7 +57,7 @@ cache <-
 #'     the cache.
 #'
 #' @examples
-#' faux_project_id <- "faux-project-id"
+#' faux_project_id <- "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 #' faux_object_name <- "local.fauxObject"
 #'
 #' cache_exists(faux_project_id, faux_object_name)
@@ -76,6 +76,34 @@ cache_exists <-
     cache <- cache()
     object_id <- cache_object_id(project_id, object_name)
     !identical(NROW(bfcquery(cache, object_id, "rname")), 0L)
+}
+
+#' @rdname cache
+#'
+#' @description `cache_list()` summarizes project objects available in
+#'     the cache.
+#'
+#' @return `cache_list()` returns a tibble with two columns: the
+#'     `project_id` and `object_name` of objects in the cache. These
+#'     can be use in, e.g., `cache_read()` and `cache_remove()`.
+#'
+#' @examples
+#' cache_list()
+#'
+#' @importFrom BiocFileCache bfcinfo
+#'
+#' @importFrom dplyr .data filter
+#'
+#' @export
+cache_list <-
+    function()
+{
+    rname <- bfcinfo(cache()) |> pull(rname)
+    tibble(
+        project_id = substr(rname, 1, 36),
+        object_name = substr(rname, 38, nchar(rname))
+    ) |>
+        filter(nzchar(.data$object_name))
 }
 
 #' @rdname cache

@@ -3,6 +3,7 @@
 \name{cache}
 \alias{cache}
 \alias{cache_exists}
+\alias{cache_list}
 \alias{cache_add}
 \alias{cache_read}
 \alias{cache_remove}
@@ -11,6 +12,8 @@
 cache(create = TRUE)
 
 cache_exists(project_id, object_name)
+
+cache_list()
 
 cache_add(
   object,
@@ -64,6 +67,10 @@ package.
 object identified by \code{projectId} and \code{object_name} exists in
 the cache.
 
+\code{cache_list()} returns a tibble with two columns: the
+\code{project_id} and \code{object_name} of objects in the cache. These
+can be use in, e.g., \code{cache_read()} and \code{cache_remove()}.
+
 \code{cache_add()} returns, invisibly, the cache file path where
 the object is stored.
 
@@ -83,6 +90,9 @@ package-specific cache.
 cache. The object is identified by the concatentation of the
 \code{project_id} and \code{object_name} argument.
 
+\code{cache_list()} summarizes project objects available in
+the cache.
+
 \code{cache_add()} adds \code{object} to the cache, using
 \code{project_id} and \code{object_name} to create an identifier. The
 \code{writer_function} is used to save the object to the cache.
@@ -97,10 +107,12 @@ into \emph{R}.
 \examples{
 cache()
 
-faux_project_id <- "faux-project-id"
+faux_project_id <- "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 faux_object_name <- "local.fauxObject"
 
 cache_exists(faux_project_id, faux_object_name)
+
+cache_list()
 
 cache_exists(faux_project_id, faux_object_name)       # FALSE
 cache_add(letters, faux_project_id, faux_object_name)
