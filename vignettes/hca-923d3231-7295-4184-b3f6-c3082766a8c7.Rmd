@@ -1,0 +1,165 @@
+---
+title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+author:
+  - name: Martin Morgan
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Martin.Morgan@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "6 October 2022"
+package: "hcaCaseStudies 0.0.0.9004"
+vignette: >
+  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+library(hca)
+library(dplyr)
+```
+
+## Project information
+
+Set the project id
+
+```{r project_id}
+project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+```
+
+Display information about the project
+
+```{r project-information}
+project_information(project_id)
+```
+
+## Conventions
+
+Statistics calculated locally use `local.*` for column names, e.g.,
+`local.cellCount`.
+
+# Data processing
+
+## Project & samples
+
+Create a filter to identify the project
+
+```{r filter}
+project_filter <- filters(projectId = list(is = project_id))
+```
+
+Find the project
+
+```{r find_project}
+p <- projects(project_filter, as = "tibble_expanded")
+p |> glimpse()
+```
+
+Samples associated with the project
+
+```{r samples}
+s <- samples(project_filter, as = "tibble_expanded")
+```
+
+Columns are either variable and therefore describe sample-level
+information... There are nine samples, ranging from 18 to 76 years
+old.
+
+```{r samples-exploration}
+## informative 'specimen' or 'donorOrganisms' columns
+s |>
+    select(starts_with("specimens") | starts_with("donorOrganisms")) |>
+    select(where(column_is_informative))
+```
+
+...or invariant and reflect experiment-wide annotation
+
+```{r experiment-metadata}
+s |>
+    select(where(column_is_experimentwide)) |>
+    distinct() |>
+    glimpse()
+```
+
+## Data files
+
+What types of files does the project have?
+
+```{r files-available}
+files1 <- files(project_filter)
+
+files1 |>
+    glimpse()
+
+files1 |>
+    count(fileFormat)
+```
+
+There are 72 fastq files, but no summaries, so count matrices cannot
+be easily constructed.
+
+## Row, sample, and cell annotations
+
+We don't have any information on row (gene) data.
+
+```{r row-data}
+row_data <- tibble()
+```
+
+Column (sample & cell) data
+
+```{r sample-data}
+sample_data <-
+    ## from the hca sample annotation...
+    s |>
+    select(
+        where(column_is_informative) & where(is.atomic)
+    )
+    ## ...but no local computations, e.g.,gene and cell counts
+
+sample_data
+```
+
+We don't have any cell data.
+
+## Experiment-wide metadata
+
+```{r metadata}
+sample_metadata <-
+    s |>
+    select(where(column_is_experimentwide) & !any_of(names(p))) |>
+    distinct()
+
+metadata <- bind_cols(p, sample_metadata)
+
+metadata |>
+    glimpse()
+```
+
+## Assemble into SingleCellExperiment (to come)
+
+# Anomalies
+
+No count summary files.
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```
