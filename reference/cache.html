@@ -5,6 +5,8 @@ package-specific cache.
 cache_exists() tests whether an object exists in the
 cache. The object is identified by the concatentation of the
 project_id and object_name argument.
+cache_list() summarizes project objects available in
+the cache.
 cache_add() adds object to the cache, using
 project_id and object_name to create an identifier. The
 writer_function is used to save the object to the cache.
@@ -18,6 +20,8 @@ package-specific cache.
 cache_exists() tests whether an object exists in the
 cache. The object is identified by the concatentation of the
 project_id and object_name argument.
+cache_list() summarizes project objects available in
+the cache.
 cache_add() adds object to the cache, using
 project_id and object_name to create an identifier. The
 writer_function is used to save the object to the cache.
@@ -36,7 +40,7 @@ cache_remove() removes an object from the cache."><!-- mathjax --><script src="h
     
     <a class="navbar-brand me-2" href="../index.html">hcaCaseStudies</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,6 +57,7 @@ cache_remove() removes an object from the cache."><!-- mathjax --><script src="h
     <a class="dropdown-item" href="../articles/hca-3c9d586e-bd26-4b46-8690-3faaa18ccf38.html">Case Study: Highly Parallel Genome-wide Expression Profiling of Individual Cells Using Nanoliter Droplets</a>
     <a class="dropdown-item" href="../articles/hca-5b910a43-7fb5-4ea7-b9d6-43dbd1bf2776.html">Case Study: Single-cell Transcriptome Atlas of the Human Corpus Cavernosum</a>
     <a class="dropdown-item" href="../articles/hca-8f630e0f-6bf9-4a04-9754-02533152a954.html">Case Study: The immune cell atlas of human neuroblastoma</a>
+    <a class="dropdown-item" href="../articles/hca-9a23ac2d-93dd-4bac-9bb8-040e6426db9d.html">Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains</a>
     <a class="dropdown-item" href="../articles/hca-9fc0064b-84ce-40a5-a768-e6eb3d364ee0.html">Case Study: Single-cell RNA-seq reveals cell type-specific molecular and genetic associations to lupus</a>
   </div>
 </li>
@@ -78,6 +83,8 @@ package-specific cache.</p>
 <p><code>cache_exists()</code> tests whether an object exists in the
 cache. The object is identified by the concatentation of the
 <code>project_id</code> and <code>object_name</code> argument.</p>
+<p><code>cache_list()</code> summarizes project objects available in
+the cache.</p>
 <p><code>cache_add()</code> adds <code>object</code> to the cache, using
 <code>project_id</code> and <code>object_name</code> to create an identifier. The
 <code>writer_function</code> is used to save the object to the cache.</p>
@@ -93,6 +100,8 @@ into <em>R</em>.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cache</span><span class="op">(</span>create <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">cache_exists</span><span class="op">(</span><span class="va">project_id</span>, <span class="va">object_name</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">cache_list</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">cache_add</span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
@@ -169,6 +178,11 @@ object identified by <code>projectId</code> and <code>object_name</code> exists 
 the cache.</p>
 
 
+<p><code>cache_list()</code> returns a tibble with two columns: the
+<code>project_id</code> and <code>object_name</code> of objects in the cache. These
+can be use in, e.g., <code>cache_read()</code> and <code>cache_remove()</code>.</p>
+
+
 <p><code>cache_add()</code> returns, invisibly, the cache file path where
 the object is stored.</p>
 
@@ -186,15 +200,25 @@ returns <code>TRUE</code> invisibly.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">cache</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: BiocFileCache</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> bfccache: /home/runner/.cache/R/hcaCaseStudies</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> bfccount: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> bfccache: /Users/ma38727/Library/Caches/org.R-project.R/R/hcaCaseStudies</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> bfccount: 6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> For more information see: bfcinfo() or bfcquery()</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">faux_project_id</span> <span class="op">&lt;-</span> <span class="st">"faux-project-id"</span></span></span>
+<span class="r-in"><span><span class="va">faux_project_id</span> <span class="op">&lt;-</span> <span class="st">"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"</span></span></span>
 <span class="r-in"><span><span class="va">faux_object_name</span> <span class="op">&lt;-</span> <span class="st">"local.fauxObject"</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cache_exists</span><span class="op">(</span><span class="va">faux_project_id</span>, <span class="va">faux_object_name</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">cache_list</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   project_id                           object_name      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 5b910a43-7fb5-4ea7-b9d6-43dbd1bf2776 local.countMatrix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 3c9d586e-bd26-4b46-8690-3faaa18ccf38 local.countMatrix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 9ac53858-606a-4b89-af49-804ccedaa660 local.countMatrix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 8f630e0f-6bf9-4a04-9754-02533152a954 local.countMatrix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 9a23ac2d-93dd-4bac-9bb8-040e6426db9d local.countMatrix</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cache_exists</span><span class="op">(</span><span class="va">faux_project_id</span>, <span class="va">faux_object_name</span><span class="op">)</span>       <span class="co"># FALSE</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
