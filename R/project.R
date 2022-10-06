@@ -75,6 +75,9 @@ project_information <-
     project <- projects(filter, columns = columns)
     if (identical(NROW(project), 0L))
         stop("did not find project_id '", project_id, "'")
+    add_columns <- setdiff(names(columns), colnames(project))
+    if (length(add_columns))
+        project[add_columns] = list(NA)
     project_base_url <- "https://data.humancellatlas.org/explore/projects/"
     project <- bind_cols(
         project,

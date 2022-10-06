@@ -26,7 +26,8 @@ function should come from the readr package. The default
 alternative is \code{read_csv} for comma-separated GSM files.}
 }
 \value{
-\verb{geo_gsm_cell_count() returna }.data\verb{augmented by a column}local.cellCount` reporting the number of cells in the file.
+\code{geo_gsm_cell_count()} returns \code{.data} augmented by a column
+\code{local.cellCount} reporting the number of cells in the file.
 
 \code{geo_gsm_gene_count()} returns \code{.data} augmented by a
 column of gene counts, \code{"local.geneCount"}.

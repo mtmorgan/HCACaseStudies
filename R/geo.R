@@ -17,7 +17,7 @@
 #'     column and cell labels as subsequent columns. The number of
 #'     cells is the number of columns in the file minus 1.
 #'
-#' @return `geo_gsm_cell_count() returna `.data` augmented by a column
+#' @return `geo_gsm_cell_count()` returns `.data` augmented by a column
 #'     `local.cellCount` reporting the number of cells in the file.
 #'
 #' @importFrom dplyr pull tibble left_join

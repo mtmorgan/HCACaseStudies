@@ -67,7 +67,7 @@ project_filter <- filters(projectId = list(is = project_id))
 Find the project
 
 ```{r find_project}
-p <- projects(project_filter)
+p <- projects(project_filter, as = "tibble_expanded")
 p |> glimpse()
 ```
 
@@ -110,11 +110,10 @@ files1 |>
 files1 |>
     count(fileFormat)
 
-## create `files1` with just the files needed for count-matrix
+## create `files2` with just the files needed for count-matrix
 ## analysis
 
-files1 |>
-    select(name)
+files2 <- files1
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
@@ -122,15 +121,15 @@ count matrix.
 
 ```{r retrieve}
 file_path <-
-    files1 |>
+    files2 |>
     files_download() |>
-    setNames(files1 |> pull(name))
+    setNames(files2 |> pull(name))
 
 ## join file path to appropriate components of `f`
 count_matrix_files1 <-
-    files1 |>
+    files2 |>
     left_join(tibble(
-        fileId = files1$fileId,
+        fileId = files2$fileId,
         local.filePath = unname(file_path)
     ), by = "fileId")
 ```
@@ -150,9 +149,13 @@ count_matrix_files |>
 
 ## Count matrix
 
-The GSE count matrices are not quite useful, because we do not know
-definitively how to map from cell to sample. We compute the count
-matrix by concatenating counts from the GSM files.
+Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
+package). Save it in the package cache for re-use across _R_ sessions.
+
+<!--
+add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
+more than 7 GB
+-->
 
 ```{r count-matrix}
 object_name <- "local.countMatrix"
@@ -169,40 +172,50 @@ dim(count_matrix)      # genes x cells
 format(object.size(count_matrix), units = "auto")
 ```
 
-## SingleCellExperiment
+## Row, sample, and cell annotations
 
-Column (sample) data
+Row (gene) data
 
-```{r colData}
-geo_id <-
-    pull(count_matrix_files, "name") |>
-    strsplit("_R") |>
-    vapply(head, character(1), 1L)
-
-colData <-
-    s |>
-    select(where(column_is_informative)) |>
-    left_join(
-        bind_cols(files, local.geoId = geo_id),
-        by = c(samples.id = "local.geoId")
-    )
-colData |>
-    DT::datatable()
+```{r row-data}
+row_data <- tibble()
 ```
 
-Experiment-wide metadata
+Column (sample & cell) data
+
+```{r sample-data}
+sample_data <-
+    ## from the hca sample annotation...
+    s |>
+    select(
+        where(column_is_informative) & where(is.atomic)
+    ) |>
+    ## ...and local computations, e.g.,gene and cell counts
+
+sample_data
+```
+
+```{r cell-data}
+cell_data <-
+    tibble(local.sampleId, local.barcodes)
+
+cell_data
+```
+
+## Experiment-wide metadata
 
 ```{r metadata}
-metadata <-
+sample_metadata <-
     s |>
-    select(where(column_is_experimentwide)) |>
+    select(where(column_is_experimentwide) & !any_of(names(p))) |>
     distinct()
+
+metadata <- bind_cols(p, sample_metadata)
 
 metadata |>
     glimpse()
 ```
 
-Assemble into SingleCellExperiment (to come)
+## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
 
