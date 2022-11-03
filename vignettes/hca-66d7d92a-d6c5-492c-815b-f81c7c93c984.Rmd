@@ -171,12 +171,7 @@ sample_data <-
 sample_data
 ```
 
-```{r cell-data}
-cell_data <-
-    tibble(local.sampleId, local.barcodes)
-
-cell_data
-```
+Not enough information for cell data.
 
 ## Experiment-wide metadata
 
@@ -195,6 +190,8 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+When running the count matrix, each file either had 1 or 0 cell counts.
 
 # sessionInfo() {.unnumbered}
 

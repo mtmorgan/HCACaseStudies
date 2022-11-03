@@ -113,7 +113,8 @@ files1 |>
 ## create `files2` with just the files needed for count-matrix
 ## analysis
 
-files2 <- files1
+files2 <- files1 |>
+    filter(fileFormat == "h5ad")
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
