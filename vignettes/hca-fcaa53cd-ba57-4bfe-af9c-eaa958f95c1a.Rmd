@@ -1,5 +1,5 @@
 ---
-title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+title: "Case Study: Mapping the developing human immune system across organs"
 author:
   - name: Martin Morgan
     affiliation:
@@ -11,10 +11,10 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "31 October 2022"
+date: "1 November 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteIndexEntry{Case Study: Mapping the developing human immune system across organs }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+project_id <- "fcaa53cd-ba57-4bfe-af9c-eaa958f95c1a"
 ```
 
 Display information about the project
@@ -109,13 +109,36 @@ files1 |>
 
 files1 |>
     count(fileFormat)
+
+## create `files2` with just the files needed for count-matrix
+## analysis
+
+files2 <- files1
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
+
+```{r retrieve}
+file_path <-
+    files2 |>
+    files_download() |>
+    setNames(files2 |> pull(name))
+
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files2 |>
+    left_join(tibble(
+        fileId = files2$fileId,
+        local.filePath = unname(file_path)
+    ), by = "fileId")
+```
+
+There are no summaries, so count matrices cannot be easily constructed.
 
 ## Row, sample, and cell annotations
 
-We don't have any information about row data.
+We have no information about row data.
 
 ```{r row-data}
 row_data <- tibble()
@@ -130,12 +153,11 @@ sample_data <-
     select(
         where(column_is_informative) & where(is.atomic)
     )
-    ## ...and local computations, e.g.,gene and cell counts
 
 sample_data
 ```
 
-We don't have any cell data.
+We have no cell data information.
 
 ## Experiment-wide metadata
 
@@ -155,7 +177,7 @@ metadata |>
 
 # Anomalies
 
-No count information.
+No count summary files.
 
 # sessionInfo() {.unnumbered}
 

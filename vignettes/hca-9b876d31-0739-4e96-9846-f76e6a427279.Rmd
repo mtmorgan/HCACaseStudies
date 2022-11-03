@@ -1,5 +1,5 @@
 ---
-title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+title: "Case Study: A human breast atlas integrating single-cell proteomics and transcriptomics"
 author:
   - name: Martin Morgan
     affiliation:
@@ -14,7 +14,7 @@ output:
 date: "31 October 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteIndexEntry{Case Study: A human breast atlas integrating single-cell proteomics and transcriptomics }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+project_id <- "9b876d31-0739-4e96-9846-f76e6a427279"
 ```
 
 Display information about the project
@@ -109,53 +109,62 @@ files1 |>
 
 files1 |>
     count(fileFormat)
+
+## create `files2` with just the files needed for count-matrix
+## analysis
+
+files2 <- files1 |>
+    filter(fileFormat == "csv.gz")
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
 
-## Row, sample, and cell annotations
+```{r retrieve}
+file_path <-
+    files2 |>
+    files_download() |>
+    setNames(files2 |> pull(name))
 
-We don't have any information about row data.
-
-```{r row-data}
-row_data <- tibble()
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files2 |>
+    left_join(tibble(
+        fileId = files2$fileId,
+        local.filePath = unname(file_path)
+    ), by = "fileId")
 ```
 
-Column (sample & cell) data
+We can extract some data from the files, e.g., cell and gene counts
 
-```{r sample-data}
-sample_data <-
-    ## from the hca sample annotation...
-    s |>
-    select(
-        where(column_is_informative) & where(is.atomic)
-    )
-    ## ...and local computations, e.g.,gene and cell counts
+```{r file_data}
+## 'files' is the final, locally modified, version of file data
+count_matrix_files <-
+    count_matrix_files1 |>
+    filter(name == "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz") |>
+    geo_gsm_cell_count(sep = ",") |>
+    geo_gsm_gene_count()
 
-sample_data
+count_matrix_files |>
+    select(name, local.geneCount, local.cellCount)
 ```
 
-We don't have any cell data.
+## Count matrix
 
-## Experiment-wide metadata
+Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
+package). Save it in the package cache for re-use across _R_ sessions.
 
-```{r metadata}
-sample_metadata <-
-    s |>
-    select(where(column_is_experimentwide) & !any_of(names(p))) |>
-    distinct()
-
-metadata <- bind_cols(p, sample_metadata)
-
-metadata |>
-    glimpse()
-```
-
-## Assemble into SingleCellExperiment (to come)
+<!--
+add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
+more than 7 GB
+-->
 
 # Anomalies
 
-No count information.
+No contributor generated matrices and analysis files for this project.
+
+Ran into a 'VROOM_CONNECTION_SIZE' error. I increaded the size and reran code
+only to have R crash. I believe the file is too large to process on my computer.
 
 # sessionInfo() {.unnumbered}
 

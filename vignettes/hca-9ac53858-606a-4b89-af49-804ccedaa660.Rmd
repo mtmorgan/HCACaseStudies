@@ -1,5 +1,5 @@
 ---
-title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+title: "Case Study: A Single-Cell Characterization of Human Post-implantation Embryos Cultured In Vitro Delineates Morphogenesis in Primary Syncytialization"
 author:
   - name: Martin Morgan
     affiliation:
@@ -14,7 +14,7 @@ output:
 date: "31 October 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteIndexEntry{Case Study: A Single-Cell Characterization of Human Post-implantation Embryos Cultured In Vitro Delineates Morphogenesis in Primary Syncytialization }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+project_id <- "9ac53858-606a-4b89-af49-804ccedaa660"
 ```
 
 Display information about the project
@@ -109,13 +109,73 @@ files1 |>
 
 files1 |>
     count(fileFormat)
+
+## create `files2` with just the files needed for count-matrix
+## analysis
+
+files2 <- files1 |>
+    filter(fileFormat == "csv.gz")
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
+
+```{r retrieve}
+file_path <-
+    files2 |>
+    files_download() |>
+    setNames(files2 |> pull(name))
+
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files2 |>
+    left_join(tibble(
+        fileId = files2$fileId,
+        local.filePath = unname(file_path)
+    ), by = "fileId")
+```
+
+We can extract some data from the files, e.g., cell and gene counts
+
+```{r file_data}
+## 'files' is the final, locally modified, version of file data
+count_matrix_files <-
+    count_matrix_files1 |>
+    filter(name == "GSE156456_HETR1014-matrix.csv.gz") |>
+    geo_gsm_cell_count(sep = ",") |>
+    geo_gsm_gene_count()
+
+count_matrix_files |>
+    select(name, local.geneCount, local.cellCount)
+```
+
+## Count matrix
+
+Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
+package). Save it in the package cache for re-use across _R_ sessions.
+
+<!--
+add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
+more than 7 GB
+-->
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    count_matrix_files |>
+        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
+        cache_add(project_id, object_name)
+}
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1] # sparse matrix
+dim(count_matrix)      # genes x cells
+format(object.size(count_matrix), units = "auto")
+```
 
 ## Row, sample, and cell annotations
 
-We don't have any information about row data.
+We don't have any information on row (gene) data.
 
 ```{r row-data}
 row_data <- tibble()
@@ -135,7 +195,22 @@ sample_data <-
 sample_data
 ```
 
-We don't have any cell data.
+```{r cell-data}
+meta <- readr::read_csv(file_path[1])
+cellNames <- meta |>
+    pull("...1") |>
+    strsplit(":")
+
+sampleIds <- cellNames |>
+    vapply(head, character(1), 1L)
+barcodes <- cellNames |>
+    vapply(tail, character(1), 1L)
+
+cell_data <-
+    bind_cols(meta, local.sampleIds = sampleIds, local.barcodes = barcodes)
+
+cell_data
+```
 
 ## Experiment-wide metadata
 
@@ -155,7 +230,8 @@ metadata |>
 
 # Anomalies
 
-No count information.
+The metadata file contains stage and cluster with no additional information.
+This makes it difficult to know how to map to entries in hca.
 
 # sessionInfo() {.unnumbered}
 

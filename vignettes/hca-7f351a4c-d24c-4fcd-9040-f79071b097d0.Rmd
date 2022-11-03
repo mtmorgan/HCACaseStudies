@@ -1,5 +1,5 @@
 ---
-title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+title: "Case Study: Expansion of Fcγ Receptor IIIa-Positive Macrophages, Ficolin 1-Positive Monocyte-Derived Dendritic Cells, and Plasmacytoid Dendritic Cells Associated With Severe Skin Disease in Systemic Sclerosis"
 author:
   - name: Martin Morgan
     affiliation:
@@ -11,10 +11,10 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "31 October 2022"
+date: "1 November 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteIndexEntry{Case Study: Expansion of Fcγ Receptor IIIa-Positive Macrophages, Ficolin 1-Positive Monocyte-Derived Dendritic Cells, and Plasmacytoid Dendritic Cells Associated With Severe Skin Disease in Systemic Sclerosis }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+project_id <- "7f351a4c-d24c-4fcd-9040-f79071b097d0"
 ```
 
 Display information about the project
@@ -111,11 +111,12 @@ files1 |>
     count(fileFormat)
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+There are 318 fastq files, but no summaries, so count matrices cannot be easily
+constructed.
 
 ## Row, sample, and cell annotations
 
-We don't have any information about row data.
+We don't have any information on row data.
 
 ```{r row-data}
 row_data <- tibble()
@@ -130,7 +131,6 @@ sample_data <-
     select(
         where(column_is_informative) & where(is.atomic)
     )
-    ## ...and local computations, e.g.,gene and cell counts
 
 sample_data
 ```
@@ -155,7 +155,10 @@ metadata |>
 
 # Anomalies
 
-No count information.
+When running `files()` only fastq files were found. But looking on the website
+there are 22 .h5 files that contain count matrix information that were
+contributor generated. How come these files weren't found?
+
 
 # sessionInfo() {.unnumbered}
 
