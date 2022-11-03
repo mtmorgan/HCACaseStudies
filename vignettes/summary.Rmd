@@ -1,0 +1,135 @@
+---
+title: "Summary of data files for hcaCaseStudies"
+author:
+  - name: Kayla Interdonato
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Kayla.Morrell@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "3 November 2022"
+package: "hcaCaseStudies 0.0.0.9005"
+vignette: >
+  %\VignetteIndexEntry{Summary of data files for hcaCaseStudies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+```{r define_columns, echo = FALSE}
+project_id  <- c(
+    "9ac53858-606a-4b89-af49-804ccedaa660",
+    "923d3231-7295-4184-b3f6-c3082766a8c7",
+    "9b876d31-0739-4e96-9846-f76e6a427279",
+    rep("8b9cb6ae-6a43-4e47-b9fb-3df7aeec941f", 5),
+    "7f351a4c-d24c-4fcd-9040-f79071b097d0",
+    rep("fcaa53cd-ba57-4bfe-af9c-eaa958f95c1a", 8),
+    rep("ac289b77-fb12-4a6b-ad43-c0721c698e70", 4),
+    rep("66d7d92a-d6c5-492c-815b-f81c7c93c984", 10)
+)
+file_id <- c(
+    "97a05454-96b2-426b-9333-b45c9bd9c75e",
+    NA,
+    "780846a0-dbc5-4bdc-ab3a-0da14b3ed551",
+    "6641071b-d4de-47e8-a8c7-d82e71fe6dc6",
+    "988cf427-4537-4a19-b850-5ff7d62842ca",
+    "6c62219c-d552-48f8-ac71-25b89b851e94",
+    "803caca3-d02b-495d-b7ff-c13a83a9a31d",
+    "32653f51-8504-4ca3-b7a3-271c3df7b886",
+    NA,
+    "a2bebd4b-9be2-49b0-a4e0-c3106cb7a6cd",
+    "f3c2716b-8c1d-4871-8806-a666b16306fb",
+    "bb145a01-1dd8-42bf-9919-44c4bb112a21",
+    "8b27a6bd-1bf7-4286-a0ef-01e7006dc5bf",
+    "d498d82e-0476-4955-ae64-e8708228f3bc",
+    "6ef73864-3f39-4427-93ca-94d7111a7432",
+    "9f43771e-588c-4cd8-b8f3-3ce81fdea00d",
+    "05f5f498-a210-4faa-8ca1-0e1cd1015be8",
+    "6ac47184-7f0a-48f0-ac1d-4d779312f89c",
+    "2b4c0fee-0fe2-4deb-8e08-a2f064c17ed3",
+    "00e7c268-0745-42bb-baa7-9c8a5c7fd361",
+    "89308f6b-75b5-42cd-b8ac-d35c646dc0c4",
+    "255cff6d-916f-4b06-a78b-7d66c4a3dbf7",
+    "90ade49b-bb3f-4f38-81a1-d4cd94fc7113",
+    "b1e7adaa-c4eb-40b2-a7c3-304903426f5c",
+    "a09a64fb-378d-4716-8988-66ae552033b4",
+    "15d593bb-ecb6-48bd-8cb8-58d10046361b",
+    "30b6d8de-557a-4623-9e43-6ada3bba9fa6",
+    "c2899d0c-87ea-40ab-9204-a19c8cae16a8",
+    "ddd642da-f960-4fc8-bc7d-9845071451cb",
+    "b47a407d-37c8-48f5-893b-3ffa638ebfb2",
+    "6b89b2bc-3b3f-46b8-ac35-9e160345299d"
+)
+file_name <- c(
+    "GSE156456_HETR1014-matrix.csv.gz",
+    NA,
+    "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz",
+    "GSM3717034_DS1-Rie_4_comb_clean.dge.txt.gz",
+    "GSM3717035_DS2-Rie_5_comb_clean.dge.txt.gz",
+    "GSM3717037_10X1data.HFU13.tsv.gz",
+    "GSM3717036_DS3-Rie_6_comb_clean.dge.txt.gz",
+    "GSM3717038_10X2-data.HFU14.tsv.gz",
+    NA,
+    "ATO_adata.h5ad",
+    "PAN.A01.v01.raw_count.20210429.LYMPHOID.embedding.BCR.h5ad",
+    "Visium10X_data_LI.h5ad",
+    "PAN.A01.v01.raw_count.20210429.PFI.embedding.h5ad",
+    "PAN.A01.v01.raw_count.20210429.NKT.embedding.abTCR.h5ad",
+    "Visium10X_data_SP.h5ad",
+    "PAN.A01.v01.raw_count.20210429.NKT.embedding.gdTCR.h5ad",
+    "Visium10X_data_TH.h5ad",
+    "SeuratObject_DiscoveryDataset.rds",
+    "SeuratObject_MacDifferPhase.rds",
+    "SeuratObject_DendriticCellDataset.rds",
+    "SeuratObject_KODataset.rds",
+    "GSM4431904_Donor4_ForeskinEpidermis_10XGenomics_genes.tsv.gz",
+    "GSM4431905_Donor5_ForeskinEpidermis_10XGenomics_genes.tsv.gz",
+    "GSM4431902_Donor2_ForeskinEpidermis_10XGenomics_genes.tsv.gz",
+    "GSM4431903_Donor3_ForeskinEpidermis_10XGenomics_genes.tsv.gz",
+    "GSM4431903_Donor3_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
+    "GSM4431901_Donor1_ForeskinEpidermis_10XGenomics_genes.tsv.gz",
+    "GSM4431904_Donor4_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
+    "GSM4431901_Donor1_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
+    "GSM4431902_Donor2_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
+    "GSM4431905_Donor5_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz"
+)
+success <- c(
+    TRUE,
+    FALSE,
+    FALSE,
+    rep(TRUE, 5),
+    FALSE,
+    rep(NA, 8),
+    rep(NA, 4),
+    rep(FALSE, 10)
+)
+reason <- c(
+    NA,
+    "72 fastq files, no summaries",
+    "Memory issue, 52681 cells",
+    rep(NA, 5),
+    "318 fastq files, no summaries though h5 files listed on website",
+    rep("Still working through", 8),
+    rep("Still working through", 4),
+    rep("Not enough count information, either 1 or 0 for cell count", 10)
+)
+
+df <- tibble(
+    ProjectId = project_id,
+    FileId = file_id,
+    FileName = file_name,
+    Success = success,
+    Reason = reason
+)
+
+df
+```
