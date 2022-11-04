@@ -34,7 +34,11 @@ project_id  <- c(
     "7f351a4c-d24c-4fcd-9040-f79071b097d0",
     rep("fcaa53cd-ba57-4bfe-af9c-eaa958f95c1a", 8),
     rep("ac289b77-fb12-4a6b-ad43-c0721c698e70", 4),
-    rep("66d7d92a-d6c5-492c-815b-f81c7c93c984", 10)
+    rep("66d7d92a-d6c5-492c-815b-f81c7c93c984", 10),
+    "a7c66eb1-4a4e-4f6c-9e30-ad2a485f8301",
+    rep("4c73d1e4-bad2-4a22-a0ba-55abbdbdcc3d", 2),
+    "9a23ac2d-93dd-4bac-9bb8-040e6426db9d",
+    "74e2ef9d-7c9f-418c-b281-7fb38f3b1571"
 )
 file_id <- c(
     "97a05454-96b2-426b-9333-b45c9bd9c75e",
@@ -67,7 +71,12 @@ file_id <- c(
     "c2899d0c-87ea-40ab-9204-a19c8cae16a8",
     "ddd642da-f960-4fc8-bc7d-9845071451cb",
     "b47a407d-37c8-48f5-893b-3ffa638ebfb2",
-    "6b89b2bc-3b3f-46b8-ac35-9e160345299d"
+    "6b89b2bc-3b3f-46b8-ac35-9e160345299d",
+    "cf7fda96-1945-423e-ae1a-0e9af97db0c3",
+    "2c589ed8-ad0d-410d-9f5a-7a8f0c39e83e",
+    "41c86ccf-7e97-4d71-92b9-de9ec666a49e",
+    "a56df86f-a78e-4270-9e70-020322630b53"
+    "53293d29-0a4c-4cd5-b3be-07adeac33b92"
 )
 file_name <- c(
     "GSE156456_HETR1014-matrix.csv.gz",
@@ -100,7 +109,12 @@ file_name <- c(
     "GSM4431904_Donor4_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
     "GSM4431901_Donor1_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
     "GSM4431902_Donor2_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
-    "GSM4431905_Donor5_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz"
+    "GSM4431905_Donor5_ForeskinEpidermis_10XGenomics_barcodes.tsv.gz",
+    "GSE167597_allMN_countsmatrix.csv.gz",
+    "Raw_counts_mouse_Data.csv",
+    "Raw_counts_human_Data.csv",
+    "GSE202210_RAW.tar",
+    "GSE174376_RAW.tar"
 )
 success <- c(
     TRUE,
@@ -110,7 +124,11 @@ success <- c(
     FALSE,
     rep(NA, 8),
     rep(NA, 4),
-    rep(FALSE, 10)
+    rep(FALSE, 10),
+    TRUE,
+    rep(FALSE, 2),
+    TRUE,
+    FALSE
 )
 reason <- c(
     NA,
@@ -120,7 +138,11 @@ reason <- c(
     "318 fastq files, no summaries though h5 files listed on website",
     rep("Still working through", 8),
     rep("Still working through", 4),
-    rep("Not enough count information, either 1 or 0 for cell count", 10)
+    rep("Not enough count information, either 1 or 0 for cell count", 10),
+    NA,
+    rep("not in gzip format, issue when trying to create count matrix", 2),
+    NA,
+    "No gene information when untarred the file"
 )
 
 df <- tibble(

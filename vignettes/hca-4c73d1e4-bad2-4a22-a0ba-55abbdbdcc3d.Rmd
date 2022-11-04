@@ -1,5 +1,5 @@
 ---
-title: "Case Study: Single nucleus RNA-sequencing defines unexpected diversity of cholinergic neuron types in the adult mouse spinal cord"
+title: "Case Study: Single-Cell RNA Sequencing Maps Endothelial Metabolic Plasticity in Pathological Angiogenesis"
 author:
   - name: Martin Morgan
     affiliation:
@@ -11,10 +11,10 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "3 November 2022"
+date: "4 November 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: Single nucleus RNA-sequencing defines unexpected diversity of cholinergic neuron types in the adult mouse spinal cord }
+  %\VignetteIndexEntry{Case Study: Single-Cell RNA Sequencing Maps Endothelial Metabolic Plasticity in Pathological Angiogenesis }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -40,7 +40,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "a7c66eb1-4a4e-4f6c-9e30-ad2a485f8301"
+project_id <- "4c73d1e4-bad2-4a22-a0ba-55abbdbdcc3d"
 ```
 
 Display information about the project
@@ -114,23 +114,25 @@ files1 |>
 ## analysis
 
 files2 <- files1 |>
-    filter(fileFormat == "csv.gz" | fileFormat == "csv")
+    filter(fileFormat == "csv")
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
 count matrix.
 
 ```{r retrieve}
+files3 <- files2[c(1,9),] ## the count data files
+
 file_path <-
-    files2 |>
+    files3 |>
     files_download() |>
-    setNames(files2 |> pull(name))
+    setNames(files3 |> pull(name))
 
 ## join file path to appropriate components of `f`
 count_matrix_files1 <-
-    files2 |>
+    files3 |>
     left_join(tibble(
-        fileId = files2$fileId,
+        fileId = files3$fileId,
         local.filePath = unname(file_path)
     ), by = "fileId")
 ```
@@ -141,13 +143,14 @@ We can extract some data from the files, e.g., cell and gene counts
 ## 'files' is the final, locally modified, version of file data
 count_matrix_files <-
     count_matrix_files1 |>
-    filter(name == "GSE167597_allMN_countsmatrix.csv.gz") |>
     geo_gsm_cell_count(sep = ",") |>
     geo_gsm_gene_count()
 
 count_matrix_files |>
     select(name, local.geneCount, local.cellCount)
 ```
+
+Since the count data wasn't in gzip format we cannot calculate counts.
 
 ## Count matrix
 
@@ -163,7 +166,8 @@ more than 7 GB
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
-        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
+        filter(startsWith(name, "GSM")) |>
+        geo_gsm_count_matrix() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
@@ -189,21 +193,15 @@ sample_data <-
     s |>
     select(
         where(column_is_informative) & where(is.atomic)
-    )
+    ) |>
     ## ...and local computations, e.g.,gene and cell counts
 
 sample_data
 ```
 
 ```{r cell-data}
-
-all_dat_filePath <- count_matrix_files1 |>
-    pull(local.filePath) |>
-    tail(1)
-
-all_dat <- readr::read_csv(all_dat_filePath)
-
-cell_data <- all_dat[all_dat$barcodes %in% colnames(count_matrix),]
+cell_data <-
+    tibble(local.sampleId, local.barcodes)
 
 cell_data
 ```
@@ -225,6 +223,8 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+Count data was not in gzip format.
 
 # sessionInfo() {.unnumbered}
 
