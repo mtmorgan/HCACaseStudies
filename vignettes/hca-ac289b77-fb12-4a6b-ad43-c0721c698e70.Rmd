@@ -33,6 +33,7 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
+library(Seurat)
 ```
 
 ## Project information
@@ -135,94 +136,20 @@ count_matrix_files1 <-
     ), by = "fileId")
 ```
 
-We can extract some data from the files, e.g., cell and gene counts
-
-```{r file_data}
-## 'files' is the final, locally modified, version of file data
-count_matrix_files <-
-    count_matrix_files1 |>
-    geo_gsm_cell_count() |>
-    geo_gsm_gene_count()
-
-count_matrix_files |>
-    select(name, local.geneCount, local.cellCount)
-```
-
-## Count matrix
-
-Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
-package). Save it in the package cache for re-use across _R_ sessions.
-
-<!--
-add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
-more than 7 GB
--->
-
-```{r count-matrix}
-object_name <- "local.countMatrix"
-if (!cache_exists(project_id, object_name)) {
-    count_matrix_files |>
-        filter(startsWith(name, "GSM")) |>
-        geo_gsm_count_matrix() |>
-        cache_add(project_id, object_name)
-}
-count_matrix <- cache_read(project_id, object_name)
-
-class(count_matrix)[1] # sparse matrix
-dim(count_matrix)      # genes x cells
-format(object.size(count_matrix), units = "auto")
-```
-
-## Row, sample, and cell annotations
-
-Row (gene) data
-
-```{r row-data}
-row_data <- tibble()
-```
-
-Column (sample & cell) data
-
-```{r sample-data}
-sample_data <-
-    ## from the hca sample annotation...
-    s |>
-    select(
-        where(column_is_informative) & where(is.atomic)
-    ) |>
-    ## ...and local computations, e.g.,gene and cell counts
-
-sample_data
-```
-
-```{r cell-data}
-cell_data <-
-    tibble(local.sampleId, local.barcodes)
-
-cell_data
-```
-
-## Experiment-wide metadata
-
-```{r metadata}
-sample_metadata <-
-    s |>
-    select(where(column_is_experimentwide) & !any_of(names(p))) |>
-    distinct()
-
-metadata <- bind_cols(p, sample_metadata)
-
-metadata |>
-    glimpse()
-```
-
 ## Assemble into SingleCellExperiment (to come)
 
+We can convert the RDS files (that are Seurat objects) into SingleCellExperiment
+object.
+
+```{r sce}
+rds_file_paths <- count_matrix_files1 |>
+    pull(local.filePath)
+dat <- readRDS(rds_file_paths[2])
+sce_obj <- as.SingleCellExperiment(dat)
+sce_obj
+```
+
 # Anomalies
-
-How do you read in an rds file? This seems to be where the cell count data might
-be.
-
 
 # sessionInfo() {.unnumbered}
 
