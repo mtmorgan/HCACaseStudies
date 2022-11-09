@@ -33,6 +33,8 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
+library(anndata)
+library(SingleCellExperiment)
 ```
 
 ## Project information
@@ -135,50 +137,24 @@ count_matrix_files1 <-
     ), by = "fileId")
 ```
 
-There are no summaries, so count matrices cannot be easily constructed.
-
-## Row, sample, and cell annotations
-
-We have no information about row data.
-
-```{r row-data}
-row_data <- tibble()
-```
-
-Column (sample & cell) data
-
-```{r sample-data}
-sample_data <-
-    ## from the hca sample annotation...
-    s |>
-    select(
-        where(column_is_informative) & where(is.atomic)
-    )
-
-sample_data
-```
-
-We have no cell data information.
-
-## Experiment-wide metadata
-
-```{r metadata}
-sample_metadata <-
-    s |>
-    select(where(column_is_experimentwide) & !any_of(names(p))) |>
-    distinct()
-
-metadata <- bind_cols(p, sample_metadata)
-
-metadata |>
-    glimpse()
-```
-
 ## Assemble into SingleCellExperiment (to come)
 
-# Anomalies
+Since the data is in h5ad format we can create a SingleCellExperiment object
+directly from the files.
 
-No count summary files.
+```{r sce}
+h5ad_file_paths <- count_matrix_files1 |>
+    pull(local.filePath)
+h5ad <- read_h5ad(h5ad_file_paths[1])
+SingleCellExperiment(
+    assays = list(X = Matrix::t(h5ad$X)),
+    colData = h5ad$obs, rowData = h5ad$var,
+    metadata = h5ad$uns,
+    reducedDims = h5ad$obsm
+)
+``` 
+
+# Anomalies
 
 # sessionInfo() {.unnumbered}
 
