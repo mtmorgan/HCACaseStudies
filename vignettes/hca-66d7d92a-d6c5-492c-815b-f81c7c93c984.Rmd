@@ -33,6 +33,7 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
+library(tidyr)
 ```
 
 ## Project information
@@ -113,49 +114,86 @@ files1 |>
 ## create `files2` with just the files needed for count-matrix
 ## analysis
 
-files2 <- files1 |>
-    filter(fileFormat == "tsv.gz")
+files2 <- files1 |> filter(fileFormat != "fastq.gz") 
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
 count matrix.
 
 ```{r retrieve}
-file_path <-
+tar_files <-
     files2 |>
     files_download() |>
     setNames(files2 |> pull(name))
-
-## join file path to appropriate components of `f`
-count_matrix_files1 <-
-    files2 |>
-    left_join(tibble(
-        fileId = files2$fileId,
-        local.filePath = unname(file_path)
-    ), by = "fileId")
 ```
 
-We can extract some data from the files, e.g., cell and gene counts
+Parse the file names to create a tibble with local file path, file type, and
+sample id.
 
-```{r file_data}
-## 'files' is the final, locally modified, version of file data
-count_matrix_files <-
-    count_matrix_files1 |>
-    geo_gsm_cell_count() |>
-    geo_gsm_gene_count()
+```{r local-files}
+tar_files_names <- files2 |> pull(name)
 
-count_matrix_files |>
-    select(name, local.geneCount, local.cellCount)
+local_files <- 
+    tibble(
+        local.filePath = file.path(tar_files),
+        local.fileType = sub(".*_([[:alpha:]]*).*", "\\1Path", tar_files_names),
+        local.sampleId = sub("([^_]*).*", "\\1", tar_files_names)
+    ) |>
+    pivot_wider(
+        names_from = local.fileType,
+        names_prefix = "local.",
+        values_from = "local.filePath"
+    )
+
+local_files |>
+    mutate(across(ends_with("Path"), basename))
 ```
 
-Come to find out these are not count matrix files.
+Extract some data from the files, e.g., cell and gene counts.
+
+```{r file-data}
+gene_and_cell_counts <-
+    local_files |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
+    rename(local.cellCount = local.lines) |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
+    rename(local.geneCount = local.lines)
+gene_and_cell_counts |>
+    select(local.sampleId, local.geneCount, local.cellCount)
+```
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    local_files |>
+        mtx_count_matrix(
+            "local.matrixPath", "local.genesPath", "local.barcodesPath"
+        ) |>
+        cache_add(project_id, object_name)
+}
+
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1]
+dim(count_matrix)
+format(object.size(count_matrix), units = "auto")
+```
 
 ## Row, sample, and cell annotations
 
-No row data information.
+Row (gene) data
 
 ```{r row-data}
-row_data <- tibble()
+row_data <-
+    local_files |>
+    slice(1) |>
+    pull("local.genesPath") |>
+    readr::read_tsv(
+        col_names = c("ensembl_id", "hugo_symbol"),
+        show_col_types = FALSE
+    )
+
+row_data
 ```
 
 Column (sample & cell) data
@@ -166,12 +204,35 @@ sample_data <-
     s |>
     select(
         where(column_is_informative) & where(is.atomic)
+    ) |>
+    left_join(
+        gene_and_cell_counts |>
+        select(local.sampleId, local.cellCount, local.geneCount),
+        by = c(samples.id = "local.sampleId")
     )
 
 sample_data
 ```
 
-Not enough information for cell data.
+```{r cell-data}
+cell_barcodes <- 
+    local_files |>
+    pull("local.barcodesPath") |>
+    lapply(readLines)
+
+sampleId <- pull(local_files, "local.sampleId")
+cell_data <- tibble(
+    local.sampleId = rep(sampleId, lengths(cell_barcodes)),
+    local.barcodes = unlist(cell_barcodes, use.names = FALSE)
+)
+
+cell_data
+
+## N.B. some barcodes are duplicated 2 times
+cell_data |>
+    count(local.barcodes, sort = TRUE, name = "occurrences") |>
+    count(occurrences, name = "n_barcodes")
+```
 
 ## Experiment-wide metadata
 

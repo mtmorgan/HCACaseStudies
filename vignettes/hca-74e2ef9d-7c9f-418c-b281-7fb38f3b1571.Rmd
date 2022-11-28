@@ -164,8 +164,6 @@ local_files |>
     mutate(across(ends_with("Path"), basename))
 ```
 
-There is no gene count information to create a count matrix.
-
 ## Count matrix
 
 Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
@@ -177,12 +175,51 @@ more than 7 GB
 -->
 
 
+```{r file-data}
+## Remove files with NA in featuresPath and/or barcodesPath
+local_files2 <- local_files |>
+    filter(!(is.na(local.featuresPath)))
+gene_and_cell_counts <-
+    local_files2 |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
+    rename(local.cellCount = local.lines) |>
+    csv_tsv_gz_count_lines("local.sampleId", "local.featuresPath") |>
+    rename(local.geneCount = local.lines)
+gene_and_cell_counts |>
+    select(local.sampleId, local.geneCount, local.cellCount)
+```
+
+```{r count-matrix}
+object_name <- "local.countMatrix"
+if (!cache_exists(project_id, object_name)) {
+    local_files2[1:20,] |> ## processing first 20 since there seemed to be an issue with file 21
+        mtx_count_matrix(
+            "local.matrixPath", "local.featuresPath", "local.barcodesPath"
+        ) |>
+        cache_add(project_id, object_name)
+}
+count_matrix <- cache_read(project_id, object_name)
+
+class(count_matrix)[1] # sparse matrix
+dim(count_matrix)      # genes x cells
+format(object.size(count_matrix), units = "auto")
+```
+
 ## Row, sample, and cell annotations
 
 Row (gene) data
 
 ```{r row-data}
-row_data <- tibble()
+row_data <- 
+    local_files2 |>
+    slice(1) |>
+    pull("local.featuresPath") |>
+    readr::read_tsv(
+        col_names = c("ensembl_id", "hugo_symbol", "annotation"),
+        show_col_types = FALSE
+    )
+
+row_data
 ```
 
 Column (sample & cell) data
@@ -193,17 +230,35 @@ sample_data <-
     s |>
     select(
         where(column_is_informative) & where(is.atomic)
-    )
+    ) |>
     ## ...and local computations, e.g.,gene and cell counts
+    left_join(
+        gene_and_cell_counts |>
+        select(local.sampleId, local.cellCount, local.geneCount),
+        by = c(samples.id = "local.sampleId")
+    )
 
 sample_data
 ```
 
 ```{r cell-data}
-cell_data <-
-    tibble(local.sampleId, local.barcodes)
+cell_barcodes <- 
+    local_files2 |>
+    pull("local.barcodesPath") |>
+    lapply(readLines)
+
+sampleId <- pull(local_files2, "local.sampleId")
+cell_data <- tibble(
+    local.sampleId = rep(sampleId, lengths(cell_barcodes)),
+    local.barcodes = unlist(cell_barcodes, use.names = FALSE)
+)
 
 cell_data
+
+## N.B. some barcodes are duplicated multiple times
+cell_data |>
+    count(local.barcodes, sort = TRUE, name = "occurrences") |>
+    count(occurrences, name = "n_barcodes")
 ```
 
 ## Experiment-wide metadata
@@ -223,8 +278,6 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
-
-From the tar files, there are no genes files to get gene count from.
 
 # sessionInfo() {.unnumbered}
 
