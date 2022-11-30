@@ -11,8 +11,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "4 November 2022"
-package: "hcaCaseStudies 0.0.0.9005"
+date: "4 October 2022"
+package: "hcaCaseStudies 0.0.0.9003"
 vignette: >
   %\VignetteIndexEntry{Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains }
   %\VignetteEngine{knitr::rmarkdown}
@@ -33,7 +33,7 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
-library(tidyr)
+pivot_wider <- tidyr::pivot_wider
 ```
 
 ## Project information
@@ -68,7 +68,14 @@ project_filter <- filters(projectId = list(is = project_id))
 Find the project
 
 ```{r find_project}
-p <- projects(project_filter, as = "tibble_expanded")
+p <-
+    projects(project_filter, as = "tibble_expanded") |>
+    ## some column names are very long...
+    rename_with(
+        ~ sub(".*\\.(.*)", "projects.contributedAnalyses.\\1", .x),
+        starts_with("projects.contributedAnalyses")
+    )
+
 p |> glimpse()
 ```
 
@@ -85,11 +92,18 @@ information...
 ## informative 'specimen' or 'donorOrganisms' columns
 s |>
     select(starts_with("specimens") | starts_with("donorOrganisms")) |>
-    select(where(column_is_informative)) |>
-    glimpse()
+    select(where(column_is_informative))
+
+s |>
+    count(specimens.disease, donorOrganisms.biologicalSex) |>
+    pivot_wider(
+        names_from = "donorOrganisms.biologicalSex",
+        values_from = "n"
+    )
 ```
 
-...or invariant and reflect experiment-wide annotation
+...or invariant and reflect experiment-wide annotation (also found in
+the project data)
 
 ```{r experiment-metadata}
 s |>
@@ -110,8 +124,13 @@ files1 |>
 
 files1 |>
     count(fileFormat)
+```
 
-files2 <- files1 |>
+Looks like a 'tar' file contains useful data
+
+```{r}
+files2 <-
+    files1 |>
     filter(fileFormat == "tar")
 ```
 
@@ -133,6 +152,7 @@ location
 tar_files <- untar(tar_file, list = TRUE)
 length(tar_files)
 head(tar_files)
+
 ## untar to a temporary location
 exdir <- tempfile(); dir.create(exdir)
 untar(tar_file, exdir = exdir)
@@ -155,15 +175,13 @@ local_files <-
         names_prefix = "local.",
         values_from = "local.filePath"
     )
+
 ## 12 samples
 local_files |>
     mutate(across(ends_with("Path"), basename))
 ```
 
-## Count matrix
-
-Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
-package). Save it in the package cache for re-use across _R_ sessions.
+Extract some data from the files, e.g., cell and gene counts.
 
 <!--
 add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
@@ -177,9 +195,17 @@ gene_and_cell_counts <-
     rename(local.cellCount = local.lines) |>
     csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
     rename(local.geneCount = local.lines)
+
 gene_and_cell_counts |>
     select(local.sampleId, local.geneCount, local.cellCount)
 ```
+
+## Count matrix
+
+Each sample has a 'matrix mart' text file representing counts in all
+cells of the sample. Use `mtx_count_matrix()` to read these into a
+`dgCMatrix` sparse matrix (defined in the `Matrix` package). Save it
+in the package cache for re-use across _R_ sessions.
 
 ```{r count-matrix}
 object_name <- "local.countMatrix"
@@ -193,15 +219,20 @@ if (!cache_exists(project_id, object_name)) {
 count_matrix <- cache_read(project_id, object_name)
 
 class(count_matrix)[1] # sparse matrix
+format(object.size(count_matrix), units = "auto") # how much memory?
+
+## dimensions of genes x cells count matrix should match annotation summaries
 dim(count_matrix)      # genes x cells
-format(object.size(count_matrix), units = "auto")
+gene_and_cell_counts |>
+    summarize(genes = unique(local.geneCount), cells = sum(local.cellCount))
 ```
 
 ## Row, sample, and cell annotations
 
 Row (gene) data
 
-```{r row-data}
+```{r row_data}
+## all 'genes' files are identical?
 row_data <-
     local_files |>
     slice(1) |>
@@ -210,12 +241,13 @@ row_data <-
         col_names = c("ensembl_id", "hugo_symbol", "annotation"),
         show_col_types = FALSE
         )
+
 row_data
 ```
 
 Column (sample & cell) data
 
-```{r sample-data}
+```{r sample_data}
 sample_data <-
     ## from the hca sample annotation...
     s |>
@@ -229,14 +261,15 @@ sample_data <-
         by = c(samples.id = "local.sampleId")
     )
 
-sample_data
+sample_data |> DT::datatable()
 ```
 
-```{r cell-data}
+```{r cell_data}
 cell_barcodes <-
     local_files |>
     pull("local.barcodesPath") |>
     lapply(readLines)
+
 sampleId <- pull(local_files, "local.sampleId")
 cell_data <- tibble(
     local.sampleId = rep(sampleId, lengths(cell_barcodes)),
@@ -268,6 +301,8 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+None noted.
 
 # sessionInfo() {.unnumbered}
 

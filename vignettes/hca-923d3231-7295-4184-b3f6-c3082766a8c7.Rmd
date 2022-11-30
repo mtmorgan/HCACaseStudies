@@ -11,8 +11,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-date: "31 October 2022"
-package: "hcaCaseStudies 0.0.0.9005"
+date: "6 October 2022"
+package: "hcaCaseStudies 0.0.0.9004"
 vignette: >
   %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
   %\VignetteEngine{knitr::rmarkdown}
@@ -78,14 +78,14 @@ s <- samples(project_filter, as = "tibble_expanded")
 ```
 
 Columns are either variable and therefore describe sample-level
-information...
+information... There are nine samples, ranging from 18 to 76 years
+old.
 
 ```{r samples-exploration}
 ## informative 'specimen' or 'donorOrganisms' columns
 s |>
     select(starts_with("specimens") | starts_with("donorOrganisms")) |>
-    select(where(column_is_informative)) |>
-    glimpse()
+    select(where(column_is_informative))
 ```
 
 ...or invariant and reflect experiment-wide annotation
@@ -111,11 +111,12 @@ files1 |>
     count(fileFormat)
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+There are 72 fastq files, but no summaries, so count matrices cannot
+be easily constructed.
 
 ## Row, sample, and cell annotations
 
-We don't have any information about row data.
+We don't have any information on row (gene) data.
 
 ```{r row-data}
 row_data <- tibble()
@@ -130,7 +131,7 @@ sample_data <-
     select(
         where(column_is_informative) & where(is.atomic)
     )
-    ## ...and local computations, e.g.,gene and cell counts
+    ## ...but no local computations, e.g.,gene and cell counts
 
 sample_data
 ```
@@ -155,7 +156,7 @@ metadata |>
 
 # Anomalies
 
-No count information.
+No count summary files.
 
 # sessionInfo() {.unnumbered}
 
