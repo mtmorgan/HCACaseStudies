@@ -1,10 +1,10 @@
 ---
 title: "Case Study: Single-Cell RNA Sequencing Maps Endothelial Metabolic Plasticity in Pathological Angiogenesis"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
@@ -67,7 +67,9 @@ project_filter <- filters(projectId = list(is = project_id))
 Find the project
 
 ```{r find_project}
-p <- projects(project_filter, as = "tibble_expanded")
+p <-
+    projects(project_filter, as = "tibble_expanded") |>
+    select(!starts_with("projects.contributedAnalyses"))
 p |> glimpse()
 ```
 
@@ -121,7 +123,10 @@ Retrieve and cache locally all files needed to construct a gene x cell
 count matrix.
 
 ```{r retrieve}
-files3 <- files2[c(1,9),] ## the count data files
+files3 <-
+    ## the count data files
+    files2 |>
+    filter(grepl("Raw_counts.*_Data.csv", name))
 
 file_path <-
     files3 |>
@@ -157,24 +162,27 @@ Since the count data wasn't in gzip format we cannot calculate counts.
 Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
 package). Save it in the package cache for re-use across _R_ sessions.
 
+Similar steps can be used for the larger 'mouse' data in this
+experiment.
+
 <!--
 add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
 more than 7 GB
 -->
 
 ```{r count-matrix}
-object_name <- "local.countMatrix"
+object_name <- "local.human.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
-        filter(startsWith(name, "GSM")) |>
-        geo_gsm_count_matrix() |>
+        filter(grepl("human", name)) |>
+        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
         cache_add(project_id, object_name)
 }
-count_matrix <- cache_read(project_id, object_name)
+human_count_matrix <- cache_read(project_id, object_name)
 
-class(count_matrix)[1] # sparse matrix
-dim(count_matrix)      # genes x cells
-format(object.size(count_matrix), units = "auto")
+class(human_count_matrix)[1] # sparse matrix
+dim(human_count_matrix)      # genes x cells
+format(object.size(human_count_matrix), units = "auto")
 ```
 
 ## Row, sample, and cell annotations
@@ -194,27 +202,33 @@ sample_data <-
     select(
         where(column_is_informative) & where(is.atomic)
     ) |>
-    ## ...and local computations, e.g.,gene and cell counts
+    filter(donorOrganisms.genusSpecies == "Homo sapiens")
+    ## ...and local computations, e.g., gene and cell counts
 
 sample_data
 ```
 
 ```{r cell-data}
-cell_data <-
-    tibble(local.sampleId, local.barcodes)
+human_cell_data <-
+    files2 |>
+    filter(name == "Raw_counts_human_Metadata.csv") |>
+    files_download() |>
+    readr::read_csv()
 
-cell_data
+human_cell_data |>
+    count(`Endothelial cell`, Cluster)
 ```
 
 ## Experiment-wide metadata
 
 ```{r metadata}
+## no useful sample_metadata...
 sample_metadata <-
     s |>
     select(where(column_is_experimentwide) & !any_of(names(p))) |>
     distinct()
 
-metadata <- bind_cols(p, sample_metadata)
+metadata <- p
 
 metadata |>
     glimpse()
@@ -223,8 +237,6 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
-
-Count data was not in gzip format.
 
 # sessionInfo() {.unnumbered}
 
