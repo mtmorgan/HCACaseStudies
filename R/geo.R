@@ -2,29 +2,26 @@
 #'
 #' @title Summarize GEO Files
 #'
-#' @description `geo_gsm_cell_count()` parses a GEO GSM file for the
+#' @description `cell_count_csv()` parses a GEO GSM csv file for the
 #'     number of cells present in the file.
 #'
 #' @param .data a `files_tbl_hca` object (e.g., created from
 #'     `hca::files()`) containing `fileId` and `local.filePath`
 #'     columns. All rows in `.data` must refer to GSM files.
 #'
-#' @param sep character(1) single character used to separate fields in
-#'     the GSM file. Typically tab (`'\\t"`, default) or comma `","`.
-#'
-#' @details `geo_gsm_cell_count()` parses the first line of the GSM
+#' @details `cell_count_*()` parses the first line of the GSM
 #'     file, assuming that the line is a 'header' with gene as first
 #'     column and cell labels as subsequent columns. The number of
 #'     cells is the number of columns in the file minus 1.
 #'
-#' @return `geo_gsm_cell_count()` returns `.data` augmented by a column
+#' @return `cell_count_*()` returns `.data` augmented by a column
 #'     `local.cellCount` reporting the number of cells in the file.
 #'
 #' @importFrom dplyr pull tibble left_join
 #'
 #' @export
-geo_gsm_cell_count <-
-    function(.data, sep = "\\t")
+cell_count_csv <-
+    function(.data)
 {
     stopifnot(
         inherits(.data, "files_tbl_hca"),
@@ -37,7 +34,35 @@ geo_gsm_cell_count <-
         pull(.data, "local.filePath") |>
         vapply(function(file) {
             first <- readLines(file, n = 1)
-            length(strsplit(first, sep)[[1]])
+            length(strsplit(first, sep = ",")[[1]])
+        }, integer(1))
+
+    tbl <- tibble(fileId = file_id, local.cellCount = unname(cell_count) - 1L)
+
+    left_join(.data, tbl, by = "fileId")
+}
+
+#' @rdname geo
+#'
+#' @description `cell_count_tsv()` parses a GEO GSM tsv file for the
+#'     number of cells present in the file.
+#'
+#' @export
+cell_count_tsv <- 
+    function(.data)
+{
+    stopifnot(
+        inherits(.data, "files_tbl_hca"),
+        "fileId" %in% colnames(.data),
+        "local.filePath" %in% colnames(.data)
+    )
+
+    file_id <- pull(.data, "fileId")
+    cell_count <-
+        pull(.data, "local.filePath") |>
+        vapply(function(file) {
+            first <- readLines(file, n = 1)
+            length(strsplit(first, sep = "\\t")[[1]])
         }, integer(1))
 
     tbl <- tibble(fileId = file_id, local.cellCount = unname(cell_count) - 1L)
@@ -78,15 +103,10 @@ geo_gsm_gene_count <-
 
 #' @rdname geo
 #'
-#' @description `geo_gsm_count_matrix()` returns a sparse matrix of
-#'     gene x cell counts.
+#' @description `count_matrix_csv()` returns a sparse matrix of
+#'     gene x cell counts from csv file(s).
 #'
-#' @param reader_function a function to read each GSM file. The
-#'     function should come from the readr package. The default
-#'     `read_tsv` is appropriate for tab-delimited CSV files; a common
-#'     alternative is `read_csv` for comma-separated GSM files.
-#'
-#' @details `geo_gsm_count_matrix()` parses each GEO GSM file in turn,
+#' @details `count_matrix_*()` parses each GEO GSM file in turn,
 #'     assuming that the file contains a dense matrix. The dense
 #'     matrix is converted to a sparse representation. As each file is
 #'     processed, new genes are appended to the original `i` index,
@@ -95,7 +115,7 @@ geo_gsm_gene_count <-
 #'     representations. Progress reports the amount of memory
 #'     currently consumed by the cummulating object.
 #'
-#' @return `geo_gsm_count_matrix()` returns a sparse matrix with rows
+#' @return `count_matrix_*()` returns a sparse matrix with rows
 #'     (genes) equal to the unique genes in all input files, and
 #'     columns (cells) equal to the total cell count in the GSM
 #'     files. Samples are in the order present in `.data`.
@@ -107,8 +127,8 @@ geo_gsm_gene_count <-
 #' @importFrom Matrix sparseMatrix
 #'
 #' @export
-geo_gsm_count_matrix <-
-    function(.data, reader_function = readr::read_tsv)
+count_matrix_csv <-
+    function(.data)
 {
     stopifnot(
         inherits(.data, "files_tbl_hca"),
@@ -133,7 +153,7 @@ geo_gsm_count_matrix <-
     col_names <- character()
 
     for (file in file_paths) {
-        csv <- reader_function(file, show_col_types = FALSE)
+        csv <- readr::read_csv(file, show_col_types = FALSE)
         matrix <- as.matrix(csv[,-1])
         ## a fast way to get i, j?
         sparse_matrix <- as(matrix, "dgTMatrix")
@@ -160,11 +180,82 @@ geo_gsm_count_matrix <-
     )
 }
 
+#' @rdname geo
+#'
+#' @description `count_matrix_tsv()` returns a sparse matrix of
+#'     gene x cell counts from tsv file(s).
+#'
+#' @export
+count_matrix_tsv <-
+    function(.data)
+{
+    stopifnot(
+        inherits(.data, "files_tbl_hca"),
+        "local.filePath" %in% colnames(.data)
+    )
+
+    old_vroom_connection_size <- Sys.getenv("VROOM_CONNECTION_SIZE")
+    on.exit({
+        if (nzchar(old_vroom_connection_size)) {
+            Sys.setenv(VROOM_CONNECTION_SIZE = old_vroom_connection_size)
+        } else {
+            Sys.unsetenv("VROOM_CONNECTION_SIZE")
+        }
+    })
+    ## respect user setting...
+    if (!nzchar(old_vroom_connection_size))
+        Sys.setenv(VROOM_CONNECTION_SIZE = 8 * 131072L)
+
+    file_paths <- pull(.data, "local.filePath")
+    i <- j <- x <- integer()
+    row_names <- character()
+    col_names <- character()
+
+    for (file in file_paths) {
+        csv <- readr::read_tsv(file, show_col_types = FALSE)
+        matrix <- as.matrix(csv[,-1])
+        ## a fast way to get i, j?
+        sparse_matrix <- as(matrix, "dgTMatrix")
+
+        row_names <- union(row_names, csv[[1]])
+        i_names_index <- match(csv[[1]], row_names)
+        i <- c(i, i_names_index[sparse_matrix@i + 1L])
+
+        col_offset <- length(col_names)
+        col_names <- c(col_names, colnames(matrix))
+        j <- c(j, col_offset + sparse_matrix@j + 1L)
+
+        x <- c(x, sparse_matrix@x)
+        message(
+            format(object.size(list(i, j, x)), units = "auto"), " after ",
+            basename(file)
+        )
+    }
+
+    sparseMatrix(
+        i, j, x = x,
+        dims = c(length(row_names), length(col_names)),
+        dimnames = list(row_names, col_names)
+    )
+}
+
+filetype <-
+    function(path)
+{
+    f = file(path)
+    ext = summary(f)$class
+    close.connection(f)
+    ext
+}
 count_lines_in_gzfile <-
     function(fl)
 {
     if (identical(.Platform$OS.type, "unix")) {
-        value <- system2("gunzip", c("-c", fl, "| wc -l"), stdout = TRUE)
+        if (identical(filetype(fl), "file")) {
+            value <- system2("cat", c(fl, "| wc -l"), stdout = TRUE)
+        } else {
+            value <- system2("gunzip", c("-c", fl, "| wc -l"), stdout = TRUE)
+        }
         count <- as.integer(value)
     } else {
         count <- 0L
