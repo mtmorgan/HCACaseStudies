@@ -1,10 +1,10 @@
 ---
 title: "Case Study: The myogenesis program drives clonal selection and drug resistance in rhabdomyosarcoma"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes

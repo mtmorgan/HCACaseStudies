@@ -1,10 +1,10 @@
 ---
 title: "Case Study: Single cell transcriptomics of human epidermis identifies basal stem cell transition states"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes

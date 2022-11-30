@@ -1,10 +1,10 @@
 ---
 title: "Case Study: Robust temporal map of human in vitro myelopoiesis using single-cell genomics"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
