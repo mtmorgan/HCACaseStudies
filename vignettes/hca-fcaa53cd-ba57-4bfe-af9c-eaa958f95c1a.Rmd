@@ -1,10 +1,10 @@
 ---
 title: "Case Study: Mapping the developing human immune system across organs"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
@@ -69,14 +69,16 @@ project_filter <- filters(projectId = list(is = project_id))
 Find the project
 
 ```{r find_project}
-p <- projects(project_filter, as = "tibble_expanded")
+p <-
+    projects(project_filter, as = "tibble_expanded") |>
+    select(!starts_with("projects.contributedAnalyses"))
 p |> glimpse()
 ```
 
 Samples associated with the project
 
 ```{r samples}
-s <- samples(project_filter, as = "tibble_expanded")
+s <- hca::samples(project_filter, as = "tibble_expanded")
 ```
 
 Columns are either variable and therefore describe sample-level
@@ -110,12 +112,13 @@ files1 |>
     glimpse()
 
 files1 |>
-    count(fileFormat)
+    dplyr::count(fileFormat)
 
 ## create `files2` with just the files needed for count-matrix
 ## analysis
 
-files2 <- files1 |>
+files2 <-
+    files1 |>
     filter(fileFormat == "h5ad")
 ```
 
@@ -137,13 +140,14 @@ count_matrix_files1 <-
     ), by = "fileId")
 ```
 
-## Assemble into SingleCellExperiment (to come)
+## Assemble into SingleCellExperiment
 
 Since the data is in h5ad format we can create a SingleCellExperiment object
 directly from the files.
 
 ```{r sce}
-h5ad_file_paths <- count_matrix_files1 |>
+h5ad_file_paths <-
+    count_matrix_files1 |>
     pull(local.filePath)
 h5ad <- read_h5ad(h5ad_file_paths[1])
 SingleCellExperiment(
