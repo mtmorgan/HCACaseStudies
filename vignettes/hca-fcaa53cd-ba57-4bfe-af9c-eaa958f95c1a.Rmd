@@ -1,20 +1,20 @@
 ---
-title: "Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging"
+title: "Case Study: Mapping the developing human immune system across organs"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
     toc: true
     toc_float: true
     toc_depth: 2
-date: "31 October 2022"
+date: "1 November 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: A Single-Cell Transcriptomic Atlas of Human Skin Aging }
+  %\VignetteIndexEntry{Case Study: Mapping the developing human immune system across organs }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,6 +33,8 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
+library(anndata)
+library(SingleCellExperiment)
 ```
 
 ## Project information
@@ -40,7 +42,7 @@ library(dplyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "923d3231-7295-4184-b3f6-c3082766a8c7"
+project_id <- "fcaa53cd-ba57-4bfe-af9c-eaa958f95c1a"
 ```
 
 Display information about the project
@@ -67,14 +69,16 @@ project_filter <- filters(projectId = list(is = project_id))
 Find the project
 
 ```{r find_project}
-p <- projects(project_filter, as = "tibble_expanded")
+p <-
+    projects(project_filter, as = "tibble_expanded") |>
+    select(!starts_with("projects.contributedAnalyses"))
 p |> glimpse()
 ```
 
 Samples associated with the project
 
 ```{r samples}
-s <- samples(project_filter, as = "tibble_expanded")
+s <- hca::samples(project_filter, as = "tibble_expanded")
 ```
 
 Columns are either variable and therefore describe sample-level
@@ -108,54 +112,53 @@ files1 |>
     glimpse()
 
 files1 |>
-    count(fileFormat)
+    dplyr::count(fileFormat)
+
+## create `files2` with just the files needed for count-matrix
+## analysis
+
+files2 <-
+    files1 |>
+    filter(fileFormat == "h5ad")
 ```
 
-There are 72 fastq files but no summaries so count matrices cannot be created.
+Retrieve and cache locally all files needed to construct a gene x cell
+count matrix.
 
-## Row, sample, and cell annotations
+```{r retrieve}
+file_path <-
+    files2 |>
+    files_download() |>
+    setNames(files2 |> pull(name))
 
-We don't have any information about row data.
-
-```{r row-data}
-row_data <- tibble()
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files2 |>
+    left_join(tibble(
+        fileId = files2$fileId,
+        local.filePath = unname(file_path)
+    ), by = "fileId")
 ```
 
-Column (sample & cell) data
+## Assemble into SingleCellExperiment
 
-```{r sample-data}
-sample_data <-
-    ## from the hca sample annotation...
-    s |>
-    select(
-        where(column_is_informative) & where(is.atomic)
-    )
-    ## ...and local computations, e.g.,gene and cell counts
+Since the data is in h5ad format we can create a SingleCellExperiment object
+directly from the files.
 
-sample_data
-```
-
-We don't have any cell data.
-
-## Experiment-wide metadata
-
-```{r metadata}
-sample_metadata <-
-    s |>
-    select(where(column_is_experimentwide) & !any_of(names(p))) |>
-    distinct()
-
-metadata <- bind_cols(p, sample_metadata)
-
-metadata |>
-    glimpse()
-```
-
-## Assemble into SingleCellExperiment (to come)
+```{r sce}
+h5ad_file_paths <-
+    count_matrix_files1 |>
+    pull(local.filePath)
+h5ad <- read_h5ad(h5ad_file_paths[1])
+SingleCellExperiment(
+    assays = list(X = Matrix::t(h5ad$X)),
+    colData = h5ad$obs, rowData = h5ad$var,
+    metadata = h5ad$uns,
+    reducedDims = h5ad$obsm
+)
+``` 
 
 # Anomalies
-
-No count information.
 
 # sessionInfo() {.unnumbered}
 

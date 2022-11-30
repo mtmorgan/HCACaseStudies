@@ -1,6 +1,6 @@
 Package: hcaCaseStudies
 Title: Case Studies Using Data from the Human Cell Atlas
-Version: 0.0.0.9005
+Version: 0.0.0.9006
 Authors@R: 
     person(
         given = "Martin", family = "Morgan",

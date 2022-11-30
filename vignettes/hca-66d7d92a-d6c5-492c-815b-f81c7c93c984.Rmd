@@ -1,20 +1,20 @@
 ---
-title: "Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains"
+title: "Case Study: Single cell transcriptomics of human epidermis identifies basal stem cell transition states"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
     toc: true
     toc_float: true
     toc_depth: 2
-date: "4 November 2022"
+date: "2 November 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains }
+  %\VignetteIndexEntry{Case Study: Single cell transcriptomics of human epidermis identifies basal stem cell transition states }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -41,7 +41,7 @@ library(tidyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "9a23ac2d-93dd-4bac-9bb8-040e6426db9d"
+project_id <- "66d7d92a-d6c5-492c-815b-f81c7c93c984"
 ```
 
 Display information about the project
@@ -111,64 +111,45 @@ files1 |>
 files1 |>
     count(fileFormat)
 
-files2 <- files1 |>
-    filter(fileFormat == "tar")
+## create `files2` with just the files needed for count-matrix
+## analysis
+
+files2 <- files1 |> filter(fileFormat != "fastq.gz") 
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
 count matrix.
 
 ```{r retrieve}
-tar_file <-
+tar_files <-
     files2 |>
     files_download() |>
     setNames(files2 |> pull(name))
 ```
 
-This is a 'tar' archive of GSM files; untar these to a temporary
-location
-
-```{r}
-## what files are in the tar?
-tar_files <- untar(tar_file, list = TRUE)
-length(tar_files)
-head(tar_files)
-## untar to a temporary location
-exdir <- tempfile(); dir.create(exdir)
-untar(tar_file, exdir = exdir)
-```
-
-Parse the file names to create a tibble with local file path, file
-type, and sample id
+Parse the file names to create a tibble with local file path, file type, and
+sample id.
 
 ```{r local-files}
-local_files <-
+tar_files_names <- files2 |> pull(name)
+
+local_files <- 
     tibble(
-        local.filePath = file.path(exdir, tar_files),
-        ## local.fileType becomes one of barcodesPath, genesPath, matrixPath
-        local.fileType = sub(".*_([[:alpha:]]*).*", "\\1Path", tar_files),
-        local.sampleId = sub("([^_]*).*", "\\1", tar_files)
+        local.filePath = file.path(tar_files),
+        local.fileType = sub(".*_([[:alpha:]]*).*", "\\1Path", tar_files_names),
+        local.sampleId = sub("([^_]*).*", "\\1", tar_files_names)
     ) |>
-    ## each 'sampleId' has a barcodesPath, genesPath, and matrixPath
     pivot_wider(
         names_from = local.fileType,
         names_prefix = "local.",
         values_from = "local.filePath"
     )
-## 12 samples
+
 local_files |>
     mutate(across(ends_with("Path"), basename))
 ```
 
-## Count matrix
-
-Create a `dgCMatrix` sparse matrix (defined in the `Matrix`
-package). Save it in the package cache for re-use across _R_ sessions.
-
-<!--
-add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
-more than 7 GB
--->
+Extract some data from the files, e.g., cell and gene counts.
 
 ```{r file-data}
 gene_and_cell_counts <-
@@ -190,10 +171,11 @@ if (!cache_exists(project_id, object_name)) {
         ) |>
         cache_add(project_id, object_name)
 }
+
 count_matrix <- cache_read(project_id, object_name)
 
-class(count_matrix)[1] # sparse matrix
-dim(count_matrix)      # genes x cells
+class(count_matrix)[1]
+dim(count_matrix)
 format(object.size(count_matrix), units = "auto")
 ```
 
@@ -207,9 +189,10 @@ row_data <-
     slice(1) |>
     pull("local.genesPath") |>
     readr::read_tsv(
-        col_names = c("ensembl_id", "hugo_symbol", "annotation"),
+        col_names = c("ensembl_id", "hugo_symbol"),
         show_col_types = FALSE
-        )
+    )
+
 row_data
 ```
 
@@ -222,7 +205,6 @@ sample_data <-
     select(
         where(column_is_informative) & where(is.atomic)
     ) |>
-    ## ...and local_files (gene and cell counts)
     left_join(
         gene_and_cell_counts |>
         select(local.sampleId, local.cellCount, local.geneCount),
@@ -233,10 +215,11 @@ sample_data
 ```
 
 ```{r cell-data}
-cell_barcodes <-
+cell_barcodes <- 
     local_files |>
     pull("local.barcodesPath") |>
     lapply(readLines)
+
 sampleId <- pull(local_files, "local.sampleId")
 cell_data <- tibble(
     local.sampleId = rep(sampleId, lengths(cell_barcodes)),
@@ -245,7 +228,7 @@ cell_data <- tibble(
 
 cell_data
 
-## N.B. some barcodes are duplicated 2 or 3 times
+## N.B. some barcodes are duplicated 2 times
 cell_data |>
     count(local.barcodes, sort = TRUE, name = "occurrences") |>
     count(occurrences, name = "n_barcodes")
@@ -268,6 +251,8 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+When running the count matrix, each file either had 1 or 0 cell counts.
 
 # sessionInfo() {.unnumbered}
 

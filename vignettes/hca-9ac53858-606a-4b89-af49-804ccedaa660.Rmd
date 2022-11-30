@@ -1,20 +1,20 @@
 ---
-title: "Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains"
+title: "Case Study: A Single-Cell Characterization of Human Post-implantation Embryos Cultured In Vitro Delineates Morphogenesis in Primary Syncytialization"
 author:
-  - name: Martin Morgan
+  - name: Kayla Interdonanto
     affiliation:
     - Roswell Park Comprehensive Cancer Center
-    email: Martin.Morgan@RoswellPark.org
+    email: Kayla.Morrell@RoswellPark.org
 output:
   BiocStyle::html_document:
     self_contained: yes
     toc: true
     toc_float: true
     toc_depth: 2
-date: "4 November 2022"
+date: "31 October 2022"
 package: "hcaCaseStudies 0.0.0.9005"
 vignette: >
-  %\VignetteIndexEntry{Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains }
+  %\VignetteIndexEntry{Case Study: A Single-Cell Characterization of Human Post-implantation Embryos Cultured In Vitro Delineates Morphogenesis in Primary Syncytialization }
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,7 +33,6 @@ Load useful packages
 library(hcaCaseStudies)
 library(hca)
 library(dplyr)
-library(tidyr)
 ```
 
 ## Project information
@@ -41,7 +40,7 @@ library(tidyr)
 Set the project id
 
 ```{r project_id}
-project_id <- "9a23ac2d-93dd-4bac-9bb8-040e6426db9d"
+project_id <- "9ac53858-606a-4b89-af49-804ccedaa660"
 ```
 
 Display information about the project
@@ -111,53 +110,43 @@ files1 |>
 files1 |>
     count(fileFormat)
 
+## create `files2` with just the files needed for count-matrix
+## analysis
+
 files2 <- files1 |>
-    filter(fileFormat == "tar")
+    filter(fileFormat == "csv.gz")
 ```
 
 Retrieve and cache locally all files needed to construct a gene x cell
 count matrix.
 
 ```{r retrieve}
-tar_file <-
+file_path <-
     files2 |>
     files_download() |>
     setNames(files2 |> pull(name))
+
+## join file path to appropriate components of `f`
+count_matrix_files1 <-
+    files2 |>
+    left_join(tibble(
+        fileId = files2$fileId,
+        local.filePath = unname(file_path)
+    ), by = "fileId")
 ```
 
-This is a 'tar' archive of GSM files; untar these to a temporary
-location
+We can extract some data from the files, e.g., cell and gene counts
 
-```{r}
-## what files are in the tar?
-tar_files <- untar(tar_file, list = TRUE)
-length(tar_files)
-head(tar_files)
-## untar to a temporary location
-exdir <- tempfile(); dir.create(exdir)
-untar(tar_file, exdir = exdir)
-```
+```{r file_data}
+## 'files' is the final, locally modified, version of file data
+count_matrix_files <-
+    count_matrix_files1 |>
+    filter(name == "GSE156456_HETR1014-matrix.csv.gz") |>
+    geo_gsm_cell_count(sep = ",") |>
+    geo_gsm_gene_count()
 
-Parse the file names to create a tibble with local file path, file
-type, and sample id
-
-```{r local-files}
-local_files <-
-    tibble(
-        local.filePath = file.path(exdir, tar_files),
-        ## local.fileType becomes one of barcodesPath, genesPath, matrixPath
-        local.fileType = sub(".*_([[:alpha:]]*).*", "\\1Path", tar_files),
-        local.sampleId = sub("([^_]*).*", "\\1", tar_files)
-    ) |>
-    ## each 'sampleId' has a barcodesPath, genesPath, and matrixPath
-    pivot_wider(
-        names_from = local.fileType,
-        names_prefix = "local.",
-        values_from = "local.filePath"
-    )
-## 12 samples
-local_files |>
-    mutate(across(ends_with("Path"), basename))
+count_matrix_files |>
+    select(name, local.geneCount, local.cellCount)
 ```
 
 ## Count matrix
@@ -170,24 +159,11 @@ add `eval = !nzchar(Sys.getenv("GITHUB_ACTIONS"))` if requires
 more than 7 GB
 -->
 
-```{r file-data}
-gene_and_cell_counts <-
-    local_files |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
-    rename(local.cellCount = local.lines) |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
-    rename(local.geneCount = local.lines)
-gene_and_cell_counts |>
-    select(local.sampleId, local.geneCount, local.cellCount)
-```
-
 ```{r count-matrix}
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
-    local_files |>
-        mtx_count_matrix(
-            "local.matrixPath", "local.genesPath", "local.barcodesPath"
-        ) |>
+    count_matrix_files |>
+        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
@@ -199,18 +175,10 @@ format(object.size(count_matrix), units = "auto")
 
 ## Row, sample, and cell annotations
 
-Row (gene) data
+We don't have any information on row (gene) data.
 
 ```{r row-data}
-row_data <-
-    local_files |>
-    slice(1) |>
-    pull("local.genesPath") |>
-    readr::read_tsv(
-        col_names = c("ensembl_id", "hugo_symbol", "annotation"),
-        show_col_types = FALSE
-        )
-row_data
+row_data <- tibble()
 ```
 
 Column (sample & cell) data
@@ -221,34 +189,27 @@ sample_data <-
     s |>
     select(
         where(column_is_informative) & where(is.atomic)
-    ) |>
-    ## ...and local_files (gene and cell counts)
-    left_join(
-        gene_and_cell_counts |>
-        select(local.sampleId, local.cellCount, local.geneCount),
-        by = c(samples.id = "local.sampleId")
     )
+    ## ...and local computations, e.g.,gene and cell counts
 
 sample_data
 ```
 
 ```{r cell-data}
-cell_barcodes <-
-    local_files |>
-    pull("local.barcodesPath") |>
-    lapply(readLines)
-sampleId <- pull(local_files, "local.sampleId")
-cell_data <- tibble(
-    local.sampleId = rep(sampleId, lengths(cell_barcodes)),
-    local.barcodes = unlist(cell_barcodes, use.names = FALSE)
-)
+meta <- readr::read_csv(file_path[1])
+cellNames <- meta |>
+    pull("...1") |>
+    strsplit(":")
+
+sampleIds <- cellNames |>
+    vapply(head, character(1), 1L)
+barcodes <- cellNames |>
+    vapply(tail, character(1), 1L)
+
+cell_data <-
+    bind_cols(meta, local.sampleIds = sampleIds, local.barcodes = barcodes)
 
 cell_data
-
-## N.B. some barcodes are duplicated 2 or 3 times
-cell_data |>
-    count(local.barcodes, sort = TRUE, name = "occurrences") |>
-    count(occurrences, name = "n_barcodes")
 ```
 
 ## Experiment-wide metadata
@@ -268,6 +229,9 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+The metadata file contains stage and cluster with no additional information.
+This makes it difficult to know how to map to entries in hca.
 
 # sessionInfo() {.unnumbered}
 

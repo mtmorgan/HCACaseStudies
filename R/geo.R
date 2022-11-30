@@ -70,7 +70,7 @@ geo_gsm_gene_count <-
     file_id <- pull(.data, "fileId")
     gene_count <-
         pull(.data, "local.filePath") |>
-        vapply(count_lines_in_gzfile, integer(1))
+        vapply(count_lines_in_file, integer(1))
 
     tbl <- tibble(fileId = file_id, local.geneCount = unname(gene_count) - 1L)
     left_join(.data, tbl, by = "fileId")
@@ -160,11 +160,24 @@ geo_gsm_count_matrix <-
     )
 }
 
-count_lines_in_gzfile <-
+filetype <-
+    function(path)
+{
+    f = file(path)
+    ext = summary(f)$class
+    close.connection(f)
+    ext
+}
+
+count_lines_in_file <-
     function(fl)
 {
     if (identical(.Platform$OS.type, "unix")) {
-        value <- system2("gunzip", c("-c", fl, "| wc -l"), stdout = TRUE)
+        if (identical(filetype(fl), "file")) {
+            value <- system2("cat", c(fl, "| wc -l"), stdout = TRUE)
+        } else {
+            value <- system2("gunzip", c("-c", fl, "| wc -l"), stdout = TRUE)
+        }
         count <- as.integer(value)
     } else {
         count <- 0L
