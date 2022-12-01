@@ -32,9 +32,6 @@ cache_remove(project_id, object_name)
 \item{create}{\code{logical(1)} create the cache if it does not exist?
 Default: \code{TRUE}.}
 
-\item{project_id}{\code{character(1)} project identifier, e.g.,
-\code{"3c9d586e-bd26-4b46-8690-3faaa18ccf38"}.}
-
 \item{object_name}{character(1) arbitrary object identifier. Cached
 objects created in Case Study vignettes are prefixed
 \code{"local."}, e.g., \code{"local.countMatrix"}.}

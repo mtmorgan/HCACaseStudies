@@ -7,9 +7,6 @@
 use_template(project_id, case_study_path, overwrite = FALSE)
 }
 \arguments{
-\item{project_id}{\code{character(1)} project identifier, e.g.,
-\code{"3c9d586e-bd26-4b46-8690-3faaa18ccf38"}.}
-
 \item{case_study_path}{character(1) path to the directory in which
 the case study will be created.}
 

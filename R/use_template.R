@@ -6,7 +6,7 @@
 #'     starting point for a case study. The file requires manual
 #'     editing to customize for the specific project.
 #'
-#' @inheritParams project_information
+#' @inheritParams hca::project_information
 #'
 #' @param case_study_path character(1) path to the directory in which
 #'     the case study will be created.
