@@ -142,7 +142,7 @@ We can extract some data from the files, e.g., cell and gene counts
 count_matrix_files <-
     count_matrix_files1 |>
     filter(name == "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz") |>
-    geo_gsm_cell_count(sep = ",") |>
+    cell_count_csv() |>
     geo_gsm_gene_count()
 
 count_matrix_files |>

@@ -144,7 +144,7 @@ We can extract some data from the files, e.g., cell and gene counts
 ```{r file_data}
 files3 <-
     files2 |>
-    geo_gsm_cell_count() |>
+    cell_count_tsv() |>
     geo_gsm_gene_count()
 
 files3 |>
@@ -162,7 +162,7 @@ object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     files3 |>
         filter(startsWith(name, "GSM")) |>
-        geo_gsm_count_matrix() |>
+        count_matrix_tsv() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)

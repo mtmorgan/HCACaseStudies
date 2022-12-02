@@ -161,7 +161,7 @@ We can extract some data from the files, e.g., cell and gene counts
 ```{r file_data}
 count_matrix_files <-
     files2 |>
-    geo_gsm_cell_count(sep = ",") |>
+    cell_count_csv() |>
     geo_gsm_gene_count()
 
 count_matrix_files |>
@@ -176,7 +176,7 @@ Compute the count matrix by concatenating counts from the GSM files.
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
-        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
+        count_matrix_csv() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
