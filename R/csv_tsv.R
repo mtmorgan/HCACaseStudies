@@ -3,7 +3,7 @@ count_lines_in_gzfiles <-
 {
     file_id <- pull(.data, file_id)
     pull(.data, file_path) |>
-        vapply(count_lines_in_gzfile, integer(1))
+        vapply(count_lines_in_file, integer(1))
 }
 
 #' @rdname csv_tsv
