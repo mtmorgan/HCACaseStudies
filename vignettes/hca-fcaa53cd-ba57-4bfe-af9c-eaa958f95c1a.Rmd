@@ -160,6 +160,8 @@ SingleCellExperiment(
 
 # Anomalies
 
+None to report
+
 # sessionInfo() {.unnumbered}
 
 ```{r}

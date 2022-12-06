@@ -238,6 +238,8 @@ metadata |>
 
 # Anomalies
 
+None to report
+
 # sessionInfo() {.unnumbered}
 
 ```{r}

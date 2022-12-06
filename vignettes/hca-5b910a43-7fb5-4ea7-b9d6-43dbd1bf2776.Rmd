@@ -224,6 +224,8 @@ Assemble into SingleCellExperiment (to come)
 
 # Anomalies
 
+None to report
+
 # sessionInfo() {.unnumbered}
 
 ```{r}

@@ -151,6 +151,8 @@ sce_obj
 
 # Anomalies
 
+None to report
+
 # sessionInfo() {.unnumbered}
 
 ```{r}
