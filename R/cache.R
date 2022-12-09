@@ -46,7 +46,7 @@ cache <-
 #'     cache. The object is identified by the concatentation of the
 #'     `project_id` and `object_name` argument.
 #'
-#' @inheritParams project_information
+#' @inheritParams hca::project_information
 #'
 #' @param object_name character(1) arbitrary object identifier. Cached
 #'     objects created in Case Study vignettes are prefixed
