@@ -141,8 +141,8 @@ We can extract some data from the files, e.g., cell and gene counts
 ## 'files' is the final, locally modified, version of file data
 count_matrix_files <-
     count_matrix_files1 |>
-    geo_gsm_cell_count() |>
-    geo_gsm_gene_count()
+    cell_count_tsv() |>
+    gene_count()
 
 count_matrix_files |>
     select(name, local.geneCount, local.cellCount)
@@ -162,7 +162,7 @@ more than 7 GB
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
-        geo_gsm_count_matrix() |>
+        count_matrix_tsv() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)

@@ -142,8 +142,8 @@ We can extract some data from the files, e.g., cell and gene counts
 count_matrix_files <-
     count_matrix_files1 |>
     filter(name == "GSE156456_HETR1014-matrix.csv.gz") |>
-    geo_gsm_cell_count(sep = ",") |>
-    geo_gsm_gene_count()
+    cell_count_csv() |>
+    gene_count()
 
 count_matrix_files |>
     select(name, local.geneCount, local.cellCount)
@@ -163,7 +163,7 @@ more than 7 GB
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
-        geo_gsm_count_matrix(reader_function = readr::read_csv) |>
+        count_matrix_csv() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
