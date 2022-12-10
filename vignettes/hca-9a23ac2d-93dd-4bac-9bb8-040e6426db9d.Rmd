@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -191,9 +192,9 @@ more than 7 GB
 ```{r file-data}
 gene_and_cell_counts <-
     local_files |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
+    csv_tsv_count_lines("local.sampleId", "local.barcodesPath") |>
     rename(local.cellCount = local.lines) |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
+    csv_tsv_count_lines("local.sampleId", "local.genesPath") |>
     rename(local.geneCount = local.lines)
 
 gene_and_cell_counts |>
@@ -210,14 +211,20 @@ in the package cache for re-use across _R_ sessions.
 ```{r count-matrix}
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
+    message("mtx_count_matrix start")
     local_files |>
         mtx_count_matrix(
             "local.matrixPath", "local.genesPath", "local.barcodesPath"
         ) |>
         cache_add(project_id, object_name)
 }
-count_matrix <- cache_read(project_id, object_name)
+```
 
+```{r, message = FALSE, cache = FALSE}
+count_matrix <- hcaCaseStudies::cache_read(project_id, object_name)
+```
+
+```{r}
 class(count_matrix)[1] # sparse matrix
 format(object.size(count_matrix), units = "auto") # how much memory?
 
@@ -225,6 +232,7 @@ format(object.size(count_matrix), units = "auto") # how much memory?
 dim(count_matrix)      # genes x cells
 gene_and_cell_counts |>
     summarize(genes = unique(local.geneCount), cells = sum(local.cellCount))
+message("gene_and_cell_counts end")
 ```
 
 ## Row, sample, and cell annotations

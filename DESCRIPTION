@@ -29,9 +29,12 @@ Imports:
     methods,
     dplyr,
     hca,
-    whisker
+    whisker,
+    DT
 Suggests:
-    DT,
+    Seurat,
+    SingleCellExperiment,
+    anndata,
     readr,
     tidyr,
     BiocStyle,

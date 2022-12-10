@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -154,9 +155,9 @@ Extract some data from the files, e.g., cell and gene counts.
 ```{r file-data}
 gene_and_cell_counts <-
     local_files |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.barcodesPath") |>
+    csv_tsv_count_lines("local.sampleId", "local.barcodesPath") |>
     rename(local.cellCount = local.lines) |>
-    csv_tsv_gz_count_lines("local.sampleId", "local.genesPath") |>
+    csv_tsv_count_lines("local.sampleId", "local.genesPath") |>
     rename(local.geneCount = local.lines)
 gene_and_cell_counts |>
     select(local.sampleId, local.geneCount, local.cellCount)

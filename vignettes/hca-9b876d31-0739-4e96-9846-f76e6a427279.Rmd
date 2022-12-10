@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -143,7 +144,7 @@ count_matrix_files <-
     count_matrix_files1 |>
     filter(name == "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz") |>
     cell_count_csv() |>
-    geo_gsm_gene_count()
+    gene_count()
 
 count_matrix_files |>
     select(name, local.geneCount, local.cellCount)

@@ -3,7 +3,7 @@
 \name{cell_count_csv}
 \alias{cell_count_csv}
 \alias{cell_count_tsv}
-\alias{geo_gsm_gene_count}
+\alias{gene_count}
 \alias{count_matrix_csv}
 \alias{count_matrix_tsv}
 \title{Summarize GEO Files}
@@ -12,7 +12,7 @@ cell_count_csv(.data)
 
 cell_count_tsv(.data)
 
-geo_gsm_gene_count(.data)
+gene_count(.data)
 
 count_matrix_csv(.data)
 
@@ -27,8 +27,8 @@ columns. All rows in \code{.data} must refer to GSM files.}
 \verb{cell_count_*()} returns \code{.data} augmented by a column
 \code{local.cellCount} reporting the number of cells in the file.
 
-\code{geo_gsm_gene_count()} returns \code{.data} augmented by a
-column of gene counts, \code{"local.geneCount"}.
+\code{gene_count()} returns \code{.data} augmented by a column of
+gene counts, \code{"local.geneCount"}.
 
 \verb{count_matrix_*()} returns a sparse matrix with rows
 (genes) equal to the unique genes in all input files, and
@@ -42,8 +42,8 @@ number of cells present in the file.
 \code{cell_count_tsv()} parses a GEO GSM tsv file for the
 number of cells present in the file.
 
-\code{geo_gsm_gene_count()} parses a GEO GSM file for the
-number of genes present in the file.
+\code{gene_count()} parses a GEO GSM file for the number of
+genes present in the file.
 
 \code{count_matrix_csv()} returns a sparse matrix of
 gene x cell counts from csv file(s).
@@ -57,9 +57,9 @@ file, assuming that the line is a 'header' with gene as first
 column and cell labels as subsequent columns. The number of
 cells is the number of columns in the file minus 1.
 
-\code{geo_gsm_gene_count()} counts the number of lines in the
-file, and reports the number of genes as this number minus one,
-assuming the first line is a 'header' line.
+\code{gene_count()} counts the number of lines in the file, and
+reports the number of genes as this number minus one, assuming
+the first line is a 'header' line.
 
 \verb{count_matrix_*()} parses each GEO GSM file in turn,
 assuming that the file contains a dense matrix. The dense

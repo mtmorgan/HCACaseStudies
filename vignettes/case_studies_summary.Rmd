@@ -1,5 +1,5 @@
 ---
-title: "Summary table for HCA case studies"
+title: "Case Studies Summary"
 author:
   - name: Kayla Interdonato
     affiliation:
@@ -14,7 +14,7 @@ output:
 date: "5 December 2022"
 package: "hcaCaseStudies 0.0.0.9006"
 vignette: >
-  %\VignetteIndexEntry{Summary table for HCA case studies}
+  %\VignetteIndexEntry{Case Studies Summary}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,13 +33,14 @@ Load useful packages
 library(hcaCaseStudies)
 ```
 
-## Summary table
+# Case Study Summaries
 
-The below is a summary table for all case studies within the vignette directory.
+The below is a summary table for all case studies within the vignette
+directory. `project_title` links to the case study.
 
-```{r table, echo = FALSE}
-hcaCaseStudies:::.caseStudySummary()
-``` 
+```{r table}
+case_study_summary(".")
+```
 
 # sessionInfo() {.unnumbered}
 

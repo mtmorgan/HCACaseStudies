@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -145,7 +146,7 @@ We can extract some data from the files, e.g., cell and gene counts
 files3 <-
     files2 |>
     cell_count_tsv() |>
-    geo_gsm_gene_count()
+    gene_count()
 
 files3 |>
     select(name, local.cellCount, local.geneCount)

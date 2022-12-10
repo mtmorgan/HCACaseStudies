@@ -34,7 +34,7 @@ cell_count_csv <-
         pull(.data, "local.filePath") |>
         vapply(function(file) {
             first <- readLines(file, n = 1)
-            length(strsplit(first, sep = ",")[[1]])
+            length(strsplit(first, split = ",")[[1]])
         }, integer(1))
 
     tbl <- tibble(fileId = file_id, local.cellCount = unname(cell_count) - 1L)
@@ -48,7 +48,7 @@ cell_count_csv <-
 #'     number of cells present in the file.
 #'
 #' @export
-cell_count_tsv <- 
+cell_count_tsv <-
     function(.data)
 {
     stopifnot(
@@ -62,7 +62,7 @@ cell_count_tsv <-
         pull(.data, "local.filePath") |>
         vapply(function(file) {
             first <- readLines(file, n = 1)
-            length(strsplit(first, sep = "\\t")[[1]])
+            length(strsplit(first, split = "\\t")[[1]])
         }, integer(1))
 
     tbl <- tibble(fileId = file_id, local.cellCount = unname(cell_count) - 1L)
@@ -72,18 +72,18 @@ cell_count_tsv <-
 
 #' @rdname geo
 #'
-#' @description `geo_gsm_gene_count()` parses a GEO GSM file for the
-#'     number of genes present in the file.
+#' @description `gene_count()` parses a GEO GSM file for the number of
+#'     genes present in the file.
 #'
-#' @details `geo_gsm_gene_count()` counts the number of lines in the
-#'     file, and reports the number of genes as this number minus one,
-#'     assuming the first line is a 'header' line.
+#' @details `gene_count()` counts the number of lines in the file, and
+#'     reports the number of genes as this number minus one, assuming
+#'     the first line is a 'header' line.
 #'
-#' @return `geo_gsm_gene_count()` returns `.data` augmented by a
-#'     column of gene counts, `"local.geneCount"`.
+#' @return `gene_count()` returns `.data` augmented by a column of
+#'     gene counts, `"local.geneCount"`.
 #'
 #' @export
-geo_gsm_gene_count <-
+gene_count <-
     function(.data)
 {
     stopifnot(
