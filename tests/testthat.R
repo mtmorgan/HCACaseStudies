@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(hcaCaseStudies)
+library(HCACaseStudies)
 
-test_check("hcaCaseStudies")
+test_check("HCACaseStudies")

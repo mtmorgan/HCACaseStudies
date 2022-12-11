@@ -12,7 +12,7 @@ output:
     toc_float: true
     toc_depth: 2
 date: "5 December 2022"
-package: "hcaCaseStudies 0.0.0.9006"
+package: "HCACaseStudies 0.0.1"
 vignette: >
   %\VignetteIndexEntry{Case Studies Summary}
   %\VignetteEngine{knitr::rmarkdown}
@@ -29,7 +29,7 @@ The below is a summary table for all case studies within the vignette
 directory. `project_title` links to the case study.
 
 ```{r table}
-hcaCaseStudies::case_study_summary(".")
+HCACaseStudies::case_study_summary(".")
 ```
 
 # sessionInfo() {.unnumbered}

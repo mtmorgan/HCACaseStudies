@@ -12,7 +12,7 @@ output:
     toc_float: true
     toc_depth: 2
 date: "4 November 2022"
-package: "hcaCaseStudies 0.0.0.9005"
+package: "HCACaseStudies 0.0.0.9005"
 vignette: >
   %\VignetteIndexEntry{Case Study: The myogenesis program drives clonal selection and drug resistance in rhabdomyosarcoma }
   %\VignetteEngine{knitr::rmarkdown}
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 Load useful packages
 
 ```{r setup, message = FALSE}
-library(hcaCaseStudies)
+library(HCACaseStudies)
 library(hca)
 library(dplyr)
 library(tidyr)
@@ -201,7 +201,7 @@ if (!cache_exists(project_id, object_name)) {
 }
 ```
 ```{r}
-count_matrix <- hcaCaseStudies::cache_read(project_id, object_name)
+count_matrix <- HCACaseStudies::cache_read(project_id, object_name)
 ```
 
 ```{r}

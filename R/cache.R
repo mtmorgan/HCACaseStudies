@@ -34,7 +34,7 @@ cache <-
 {
     stopifnot(.is_scalar_logical(create))
 
-    cache <- R_user_dir("hcaCaseStudies", "cache")
+    cache <- R_user_dir("HCACaseStudies", "cache")
     if (create && !dir.exists(cache))
         dir.create(cache, recursive = TRUE)
     BiocFileCache(cache)

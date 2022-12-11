@@ -12,7 +12,7 @@ output:
     toc_float: true
     toc_depth: 2
 date: "4 October 2022"
-package: "hcaCaseStudies 0.0.0.9003"
+package: "HCACaseStudies 0.0.0.9003"
 vignette: >
   %\VignetteIndexEntry{Case Study: Single-cell transcriptomic and proteomic analysis of Parkinson’s disease brains }
   %\VignetteEngine{knitr::rmarkdown}
@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 Load useful packages
 
 ```{r setup, message = FALSE}
-library(hcaCaseStudies)
+library(HCACaseStudies)
 library(hca)
 library(dplyr)
 pivot_wider <- tidyr::pivot_wider
@@ -221,7 +221,7 @@ if (!cache_exists(project_id, object_name)) {
 ```
 
 ```{r, message = FALSE, cache = FALSE}
-count_matrix <- hcaCaseStudies::cache_read(project_id, object_name)
+count_matrix <- HCACaseStudies::cache_read(project_id, object_name)
 ```
 
 ```{r}

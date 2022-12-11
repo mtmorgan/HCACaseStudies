@@ -1,6 +1,6 @@
-Package: hcaCaseStudies
+Package: HCACaseStudies
 Title: Case Studies Using Data from the Human Cell Atlas
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: 
     c(person(
         given = "Martin", family = "Morgan",
@@ -47,4 +47,4 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://mtmorgan.github.io/hcaCaseStudies/, https://github.com/mtmorgan/hcaCaseStudies
+URL: https://mtmorgan.github.io/HCACaseStudies/, https://github.com/mtmorgan/HCACaseStudies

@@ -12,7 +12,7 @@ output:
     toc_float: true
     toc_depth: 2
 date: "23 September 2022"
-package: "hcaCaseStudies 0.0.0.9000"
+package: "HCACaseStudies 0.0.0.9000"
 vignette: >
   %\VignetteIndexEntry{Case Study: Single-cell RNA-seq reveals cell type-specific molecular and genetic associations to lupus }
   %\VignetteEngine{knitr::rmarkdown}
@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 Load useful packages
 
 ```{r setup, message = FALSE}
-library(hcaCaseStudies)
+library(HCACaseStudies)
 library(hca)
 library(dplyr)
 ```

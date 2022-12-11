@@ -12,7 +12,7 @@ output:
     toc_float: true
     toc_depth: 2
 date: "1 November 2022"
-package: "hcaCaseStudies 0.0.0.9005"
+package: "HCACaseStudies 0.0.0.9005"
 vignette: >
   %\VignetteIndexEntry{Case Study: Expansion of Fcγ Receptor IIIa-Positive Macrophages, Ficolin 1-Positive Monocyte-Derived Dendritic Cells, and Plasmacytoid Dendritic Cells Associated With Severe Skin Disease in Systemic Sclerosis }
   %\VignetteEngine{knitr::rmarkdown}
@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 Load useful packages
 
 ```{r setup, message = FALSE}
-library(hcaCaseStudies)
+library(HCACaseStudies)
 library(hca)
 library(dplyr)
 ```

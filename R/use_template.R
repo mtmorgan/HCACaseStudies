@@ -71,10 +71,10 @@ use_template <-
         )
 
     doc_date <- BiocStyle::doc_date()
-    pkg_ver <- BiocStyle::pkg_ver("hcaCaseStudies")
+    pkg_ver <- BiocStyle::pkg_ver("HCACaseStudies")
 
     template_path <- system.file(
-        package = "hcaCaseStudies", "template", "hca-project.Rmd"
+        package = "HCACaseStudies", "template", "hca-project.Rmd"
     )
     template <- readLines(template_path)
     rendered <- whisker.render(template)

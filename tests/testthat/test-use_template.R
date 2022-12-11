@@ -28,7 +28,7 @@ test_that("use_template() works", {
     expect_identical(sum(grepl(project_title, rendered_template)), 2L)
     ## other injections
     doc_date <- BiocStyle::doc_date()
-    pkg_ver <- BiocStyle::pkg_ver("hcaCaseStudies")
+    pkg_ver <- BiocStyle::pkg_ver("HCACaseStudies")
     expect_identical(sum(grepl(doc_date, rendered_template)), 1L)
     expect_identical(sum(grepl(pkg_ver, rendered_template)), 1L)
 })
