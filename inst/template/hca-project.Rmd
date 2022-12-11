@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -140,8 +141,8 @@ We can extract some data from the files, e.g., cell and gene counts
 ## 'files' is the final, locally modified, version of file data
 count_matrix_files <-
     count_matrix_files1 |>
-    geo_gsm_cell_count() |>
-    geo_gsm_gene_count()
+    cell_count_tsv() |> ## change to cell_count_csv if dealing with csv files
+    gene_count()
 
 count_matrix_files |>
     select(name, local.geneCount, local.cellCount)
@@ -162,7 +163,7 @@ object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     count_matrix_files |>
         filter(startsWith(name, "GSM")) |>
-        geo_gsm_count_matrix() |>
+        count_matrix_tsv() |> ## change to count_matrix_csv() if dealing with csv files
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)

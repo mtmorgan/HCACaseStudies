@@ -192,14 +192,19 @@ gene_and_cell_counts |>
 ```{r count-matrix}
 object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
-    local_files2[1:20,] |> ## processing first 20 since there seemed to be an issue with file 21
+    local_files2[1:20,] |>
+        ## processing first 20 since there seemed to be an issue with file 21
         mtx_count_matrix(
             "local.matrixPath", "local.featuresPath", "local.barcodesPath"
         ) |>
         cache_add(project_id, object_name)
 }
-count_matrix <- cache_read(project_id, object_name)
+```
+```{r}
+count_matrix <- hcaCaseStudies::cache_read(project_id, object_name)
+```
 
+```{r}
 class(count_matrix)[1] # sparse matrix
 dim(count_matrix)      # genes x cells
 format(object.size(count_matrix), units = "auto")
@@ -278,6 +283,8 @@ metadata |>
 ## Assemble into SingleCellExperiment (to come)
 
 # Anomalies
+
+None to report
 
 # sessionInfo() {.unnumbered}
 

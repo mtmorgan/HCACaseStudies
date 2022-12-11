@@ -10,8 +10,8 @@ count_lines_in_files <-
 #'
 #' @title Summarize Tab- or Comma-Separated Files
 #'
-#' @description `csv_tsv_count_lines()` counts the number of lines
-#'     in one or several comma- or tab-delimited files.
+#' @description `csv_tsv_count_lines()` counts the number of lines in
+#'     one or several comma- or tab-delimited files.
 #'
 #' @param .data `tibble` containing a column with `file_id` and
 #'     `file_path` columns.
@@ -23,9 +23,9 @@ count_lines_in_files <-
 #' @param file_path `character(1)` a column name in `.data` containing
 #'     file paths to the file for which lines will be counted.
 #'
-#' @return `csv_tsv_count_lines()` returns the original tibble
-#'     `.data` with an additional column `local.lines` containing the
-#'     number of lines in `file_path`.
+#' @return `csv_tsv_count_lines()` returns the original tibble `.data`
+#'     with an additional column `local.lines` containing the number
+#'     of lines in `file_path`.
 #'
 #' @importFrom dplyr bind_cols
 #'

@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -145,7 +146,7 @@ count_matrix_files1 <-
 Since the data is in h5ad format we can create a SingleCellExperiment object
 directly from the files.
 
-```{r sce}
+```{r sce, eval = FALSE}
 h5ad_file_paths <-
     count_matrix_files1 |>
     pull(local.filePath)
@@ -159,6 +160,8 @@ SingleCellExperiment(
 ``` 
 
 # Anomalies
+
+None to report
 
 # sessionInfo() {.unnumbered}
 

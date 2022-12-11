@@ -18,11 +18,11 @@ requested.}
 file paths to the file for which lines will be counted.}
 }
 \value{
-\code{csv_tsv_count_lines()} returns the original tibble
-\code{.data} with an additional column \code{local.lines} containing the
-number of lines in \code{file_path}.
+\code{csv_tsv_count_lines()} returns the original tibble \code{.data}
+with an additional column \code{local.lines} containing the number
+of lines in \code{file_path}.
 }
 \description{
-\code{csv_tsv_count_lines()} counts the number of lines
-in one or several comma- or tab-delimited files.
+\code{csv_tsv_count_lines()} counts the number of lines in
+one or several comma- or tab-delimited files.
 }

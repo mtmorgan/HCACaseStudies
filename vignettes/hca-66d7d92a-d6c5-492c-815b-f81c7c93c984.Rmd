@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -252,7 +253,7 @@ metadata |>
 
 # Anomalies
 
-When running the count matrix, each file either had 1 or 0 cell counts.
+None to report
 
 # sessionInfo() {.unnumbered}
 

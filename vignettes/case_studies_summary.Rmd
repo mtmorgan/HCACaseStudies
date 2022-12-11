@@ -1,0 +1,49 @@
+---
+title: "Case Studies Summary"
+author:
+  - name: Kayla Interdonato
+    affiliation:
+    - Roswell Park Comprehensive Cancer Center
+    email: Kayla.Morrell@RoswellPark.org
+output:
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+date: "5 December 2022"
+package: "hcaCaseStudies 0.0.0.9006"
+vignette: >
+  %\VignetteIndexEntry{Case Studies Summary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r internal-setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE
+)
+```
+
+# Setup
+
+Load useful packages
+
+```{r setup, message = FALSE}
+library(hcaCaseStudies)
+```
+
+# Case Study Summaries
+
+The below is a summary table for all case studies within the vignette
+directory. `project_title` links to the case study.
+
+```{r table}
+case_study_summary(".")
+```
+
+# sessionInfo() {.unnumbered}
+
+```{r}
+sessionInfo()
+```

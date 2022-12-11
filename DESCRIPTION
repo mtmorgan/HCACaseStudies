@@ -1,12 +1,14 @@
 Package: hcaCaseStudies
 Title: Case Studies Using Data from the Human Cell Atlas
-Version: 0.0.0.9006
+Version: 0.0.1
 Authors@R: 
-    person(
+    c(person(
         given = "Martin", family = "Morgan",
         role = c("aut", "cre"),
         email = "Martin.Morgan@roswellpark.org",
         comment = c(ORCID = "0000-0002-5874-8148")
+    ),
+      person("Kayla", "Interdonanto", role = "aut")
     )
 Description: The Human Cell Atlas provides RNAseq and other data from
     high-throughput single cell genomics experiments. This package
@@ -29,9 +31,12 @@ Imports:
     methods,
     dplyr,
     hca,
-    whisker
+    whisker,
+    DT
 Suggests:
-    DT,
+    Seurat,
+    SingleCellExperiment,
+    anndata,
     readr,
     tidyr,
     BiocStyle,

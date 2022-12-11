@@ -21,7 +21,8 @@ vignette: >
 
 ```{r internal-setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE
+    collapse = TRUE,
+    cache = TRUE
 )
 ```
 
@@ -176,7 +177,7 @@ object_name <- "local.countMatrix"
 if (!cache_exists(project_id, object_name)) {
     files3 |>
         filter(startsWith(local.fileName, "GSM")) |>
-        count_matrix_tsv() |>
+        count_matrix_csv() |>
         cache_add(project_id, object_name)
 }
 count_matrix <- cache_read(project_id, object_name)
