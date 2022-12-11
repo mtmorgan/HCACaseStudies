@@ -47,4 +47,4 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://mtmorgan.github.io/hcaCaseStudies/
+URL: https://mtmorgan.github.io/hcaCaseStudies/, https://github.com/mtmorgan/hcaCaseStudies

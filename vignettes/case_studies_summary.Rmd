@@ -25,21 +25,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Setup
-
-Load useful packages
-
-```{r setup, message = FALSE}
-library(hcaCaseStudies)
-```
-
-# Case Study Summaries
-
 The below is a summary table for all case studies within the vignette
 directory. `project_title` links to the case study.
 
 ```{r table}
-case_study_summary(".")
+hcaCaseStudies::case_study_summary(".")
 ```
 
 # sessionInfo() {.unnumbered}
